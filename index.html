@@ -645,6 +645,10 @@
         const GOLDEN_BONG_MULTIPLIER = 3;
         const MAX_HITS_PER_BOWL = 10;
         const BASE_REFILL_DURATION = 2000; // 2 seconds
+        
+        // --- NEW: Global Volume Reduction Constant (for -6dB reduction) ---
+        const VOLUME_REDUCTION = -6; // 6 dB reduction (approx 50% perceived volume)
+        // ------------------------------------------------------------------
 
         // --- SHOP ITEM CONFIGURATION (FIXED IDS TO CAMELCASE FOR LEVELING) ---
         const SHOP_ITEMS_CONFIG = [
@@ -728,16 +732,17 @@
         let levelUpToneSynth;
         let achievementSynth;
         let bongHitSynth; // For the actual hit sound
-        let kickSynth; // NEW: For the punchy sound
+        let kickSynth; // For the punchy sound
 
         // Initialize Tone.js components globally
         try {
             // Tone.js Sound Initializers
-            coinSynth = new Tone.PolySynth(Tone.DuoSynth).toDestination();
-            levelUpToneSynth = new Tone.PolySynth(Tone.AMSynth).toDestination();
+            coinSynth = new Tone.PolySynth(Tone.DuoSynth, { volume: VOLUME_REDUCTION }).toDestination();
+            levelUpToneSynth = new Tone.PolySynth(Tone.AMSynth, { volume: VOLUME_REDUCTION }).toDestination();
             
-            // Initialize the achievement sound synth (FIXED: Changed to PolySynth to allow chord)
+            // Initialize the achievement sound synth
             achievementSynth = new Tone.PolySynth(Tone.Synth, { 
+                volume: VOLUME_REDUCTION,
                 oscillator: { type: "sine" },
                 envelope: {
                     attack: 0.05,
@@ -749,6 +754,7 @@
 
             // Initialize the bong hit sound synth
             bongHitSynth = new Tone.NoiseSynth({
+                volume: VOLUME_REDUCTION,
                 noise: { type: 'pink' },
                 envelope: {
                     attack: 0.01,
@@ -758,7 +764,7 @@
                 }
             }).toDestination();
             
-            // NEW: Initialize punchy kick synth for satisfaction
+            // Initialize punchy kick synth for satisfaction
             kickSynth = new Tone.MembraneSynth({
                 pitchDecay: 0.05,
                 octaves: 2,
@@ -768,7 +774,7 @@
                     sustain: 0.01,
                     release: 0.05
                 },
-                volume: -10 
+                volume: -10 + VOLUME_REDUCTION // Adjusting from -10 to -16
             }).toDestination();
 
             
@@ -1477,11 +1483,12 @@
 
             const currentLevel = gameState.upgrades[itemId];
             
-            // Special cases
+            // --- Special Case: Bong Master (Clean Resin) ---
             if (itemId === 'bong_master') {
-                if (gameState.coins >= BONG_MASTER_COST) {
-                    gameState.coins -= BONG_MASTER_COST;
-                    gameState.stats.goldSpent += BONG_MASTER_COST;
+                const cost = BONG_MASTER_COST;
+                if (gameState.coins >= cost) {
+                    gameState.coins -= cost;
+                    gameState.stats.goldSpent += cost;
                     
                     // Apply effect: Reset resin, reduce water dirtiness slightly
                     gameState.dirtiness = 0;
@@ -1491,44 +1498,49 @@
                     showTemporaryAlert("Bong Master: Resin cleared! Glass spotless!", 'text-fuchsia-400', 1500);
                     playCoinSound();
                     checkAchievements();
+                    renderShop(); // FIX: Explicitly re-render shop immediately
                 } else {
                     showTemporaryAlert("Not enough coins for Bong Master!", 'text-red-400');
                 }
-                updateUI();
-                return;
-            }
+            } 
             
-            if (itemId === 'golden_bong' && currentLevel === 0) {
-                if (gameState.coins >= GOLDEN_BONG_COST) {
-                    gameState.coins -= GOLDEN_BONG_COST;
-                    gameState.stats.goldSpent += GOLDEN_BONG_COST;
+            // --- Special Case: Golden Bong (One-time purchase) ---
+            else if (itemId === 'golden_bong' && currentLevel === 0) {
+                const cost = GOLDEN_BONG_COST;
+                if (gameState.coins >= cost) {
+                    gameState.coins -= cost;
+                    gameState.stats.goldSpent += cost;
                     gameState.upgrades[itemId] = 1;
                     showTemporaryAlert("Golden Bong Purchased! Gold x3 FOREVER!", 'text-yellow-500', 3000);
                     playAchievementSound();
                     checkAchievements();
+                    renderShop(); // FIX: Explicitly re-render shop immediately
                 } else {
                     showTemporaryAlert("Not enough coins for Golden Bong!", 'text-red-400');
                 }
-                updateUI();
-                return;
             }
             
-            // General upgrades
-            const cost = calculateCost(item.baseCost, currentLevel);
+            // --- General Upgrades ---
+            else {
+                const cost = calculateCost(item.baseCost, currentLevel);
 
-            if (currentLevel < item.maxPurchases && gameState.coins >= cost) {
-                gameState.coins -= cost;
-                gameState.stats.goldSpent += cost;
-                gameState.upgrades[itemId]++;
-                showTemporaryAlert(`${item.name} upgraded to Lv.${gameState.upgrades[itemId]}!`, 'text-emerald-400');
-                playCoinSound();
-                checkAchievements();
-                updateUI();
-            } else if (currentLevel >= item.maxPurchases) {
-                showTemporaryAlert(`${item.name} is already MAXED!`, 'text-red-400');
-            } else {
-                showTemporaryAlert("Not enough coins!", 'text-red-400');
+                if (currentLevel < item.maxPurchases && gameState.coins >= cost) {
+                    gameState.coins -= cost;
+                    gameState.stats.goldSpent += cost;
+                    gameState.upgrades[itemId]++;
+                    showTemporaryAlert(`${item.name} upgraded to Lv.${gameState.upgrades[itemId]}!`, 'text-emerald-400');
+                    playCoinSound();
+                    checkAchievements();
+                    renderShop(); // FIX: Explicitly re-render shop immediately
+                } else if (currentLevel >= item.maxPurchases) {
+                    showTemporaryAlert(`${item.name} is already MAXED!`, 'text-red-400');
+                } else {
+                    showTemporaryAlert("Not enough coins!", 'text-red-400');
+                }
             }
+
+            // Always update UI after attempting purchase to reflect coin change, new levels, or alert
+            updateUI(); 
         }
 
 
@@ -1728,6 +1740,7 @@
                 }
                 
                 const bubble = new Tone.NoiseSynth({
+                    volume: -20 + VOLUME_REDUCTION, // Adjusting the bubbling sound volume as well
                     noise: { type: 'brown' },
                     envelope: {
                         attack: 0.01,
@@ -1735,7 +1748,6 @@
                         sustain: 0,
                         release: 0.05
                     },
-                    volume: -20
                 }).toDestination();
                 bubble.triggerAttackRelease(0.1, Tone.now() + 0.05);
                 setTimeout(() => bubble.dispose(), 500);
