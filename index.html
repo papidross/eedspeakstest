@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eedspeaks Smoke Test</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tone.js for generating audio -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0f172a; /* Dark background for a 'cosmic' feel */
+            background-color: #0f172a; /* Dark background base */
+            background-image: radial-gradient(circle at 50% 100%, #1e293b 0%, #0f172a 70%); /* Smoky gradient */
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -17,15 +20,33 @@
             padding: 20px;
         }
         .container {
-            background-color: #1e293b; /* Darker card */
+            background-color: #26333e; /* Darker card, slightly blue/gray */
             border-radius: 16px;
             padding: 32px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); /* Stronger shadow */
             max-width: 800px;
             width: 100%;
             border: 1px solid #334155;
         }
-        /* Style for the regular fact buttons (Emerald Green) */
+        /* Subtle text glow for the main title */
+        .glow-text {
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3), 0 0 15px rgba(16, 185, 129, 0.8);
+        }
+        /* Background Leaf SVG Styling */
+        .leaf-bg {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 80vmin; /* Responsive size */
+            height: 80vmin;
+            transform: translate(-50%, -50%) rotate(25deg);
+            /* Increased opacity from 0.05 to 0.2 for visibility */
+            opacity: 0.2; 
+            filter: drop-shadow(0 0 15px #059669); /* Soft green glow effect */
+            z-index: -1; /* Ensure it stays behind all content */
+            pointer-events: none; /* Make sure it doesn't interfere with clicks */
+        }
+        /* Style for the regular fact buttons (Emerald Green - Cannabis color) */
         .fact-button {
             background-image: linear-gradient(to right, #10b981, #059669); /* Emerald Green */
             color: white;
@@ -43,10 +64,10 @@
         }
         .fact-button:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.6);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.8);
             background-image: linear-gradient(to right, #059669, #10b981);
         }
-        /* Style for the CTA/Submit button (Purple) */
+        /* Style for the CTA/Submit button (Purple/Violet - Cosmic color) */
         .cta-button {
             background-image: linear-gradient(to right, #a855f7, #9333ea); /* Purple/Violet */
             color: white;
@@ -56,17 +77,17 @@
             font-weight: 800;
             cursor: pointer;
             transition: all 0.2s ease-in-out;
-            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5);
+            box-shadow: 0 6px 25px rgba(168, 85, 247, 0.6);
             border: none;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
         .cta-button:hover {
             transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(168, 85, 247, 0.7);
+            box-shadow: 0 10px 40px rgba(168, 85, 247, 0.9);
         }
         .fact-box, .result-box {
-            background-color: #334155; /* Slate color for contrast */
+            background-color: #2d3b3c; /* Dark, smoky teal/green for the display box */
             color: #f8fafc; /* Light text */
             padding: 20px;
             border-radius: 12px;
@@ -77,7 +98,7 @@
             font-size: 1.125rem;
             font-style: italic;
             transition: all 0.3s ease-in-out;
-            border-left: 5px solid #a855f7; /* Purple accent */
+            border-left: 5px solid #10b981; /* Green accent border */
             text-align: center;
         }
         .fact-box p, .result-box p {
@@ -93,8 +114,14 @@
     </style>
 </head>
 <body>
+    
+    <!-- SVG for the Cannabis Leaf Icon (fixed background element) -->
+    <svg id="cannabis-leaf" class="leaf-bg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 0 L40 20 L20 15 L35 40 L20 60 L50 90 L80 60 L65 40 L80 15 L60 20 Z" fill="#10b981"/>
+    </svg>
+
     <div class="container">
-        <h1 class="text-4xl sm:text-5xl font-extrabold text-white mb-4 tracking-wider text-center">
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-white mb-4 tracking-wider text-center glow-text">
             EEDSPEAKS <span class="text-emerald-400">Smoke Test</span>
         </h1>
         <p class="text-slate-400 mb-8 text-lg text-center">
@@ -150,7 +177,7 @@
                     </div>
                 </div>
 
-                <!-- NEW QUESTION 4 ADDED HERE -->
+                <!-- QUESTION 4 -->
                 <div class="question-card">
                     <label class="block text-white text-xl font-semibold mb-3">4. How often does Eedspeaks clean his bong and collect the black resin? (Tricky)</label>
                     <div class="space-y-2 text-slate-300">
@@ -166,6 +193,12 @@
                 </div>
             </form>
 
+            <!-- NEW CONFIRMATION STEP -->
+            <div id="confirmationView" class="hidden mt-6 text-center">
+                <p class="text-3xl font-bold text-white mb-6">Are you <span class="text-red-500">SURE</span>?</p>
+                <button id="confirmResultButton" class="cta-button">Yes, Reveal It!</button>
+            </div>
+            
             <div id="resultDisplay" class="result-box hidden mt-6">
                 <!-- Result will be displayed here -->
             </div>
@@ -198,7 +231,69 @@
         const testForm = document.getElementById('eedspeaksTestForm');
         const resultDisplay = document.getElementById('resultDisplay');
         const restartButton = document.getElementById('restartButton');
+        
+        // New elements for the confirmation step
+        const confirmationView = document.getElementById('confirmationView');
+        const confirmResultButton = document.getElementById('confirmResultButton');
 
+        let finalResultText = ""; // Global variable to store the calculated result temporarily
+
+        // --- Tone.js Music Setup ---
+        let musicLoop = null;
+        let synth = null;
+        let isAudioInitialized = false;
+
+        function startMusic() {
+            if (isAudioInitialized) return;
+
+            // 1. Start the Tone.js audio context (requires user gesture)
+            Tone.start();
+
+            // 2. Create the synth with a chill tone (PolySynth for chords)
+            synth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: "triangle" }, // Smooth waveform
+                envelope: {
+                    attack: 1, // Slow attack
+                    decay: 0.5,
+                    sustain: 0.5,
+                    release: 2,
+                }
+            });
+            
+            // Add a touch of reverb for atmosphere
+            const reverb = new Tone.Reverb({ decay: 4, wet: 0.5 }).toDestination();
+            synth.connect(reverb);
+            
+            // Set master volume low
+            Tone.Destination.volume.value = -12;
+
+            // 3. Define the chill chord progression (Cmaj7, Am7, Dm7, G7)
+            const chords = [
+                ["C4", "E4", "G4", "B4"], // C Major 7
+                ["A3", "C4", "E4", "G4"], // A minor 7
+                ["D4", "F4", "A4", "C5"], // D minor 7
+                ["G3", "B3", "D4", "F4"], // G 7
+            ];
+
+            // 4. Create the looping sequence
+            let currentChordIndex = 0;
+            musicLoop = new Tone.Loop(time => {
+                const chord = chords[currentChordIndex % chords.length];
+                synth.triggerAttackRelease(chord, "2n", time, 0.5); // Play for half note duration
+                currentChordIndex++;
+            }, "2n").start(0); 
+
+            Tone.Transport.bpm.value = 60; // Slow, chill BPM
+            Tone.Transport.start();
+            isAudioInitialized = true;
+        }
+
+        function stopMusic() {
+            if (musicLoop) {
+                musicLoop.stop();
+            }
+        }
+        
         // --- View Management ---
 
         function showView(viewId) {
@@ -210,11 +305,14 @@
                 // Ensure form and result are reset when returning to info view
                 testForm.reset();
                 testForm.classList.remove('hidden');
+                confirmationView.classList.add('hidden'); // Ensure confirmation is hidden
                 resultDisplay.classList.add('hidden');
                 restartButton.classList.add('hidden');
+                stopMusic(); // Stop music when returning to info view
             } else if (viewId === 'testView') {
                 testView.classList.remove('hidden');
                 testForm.classList.remove('hidden');
+                confirmationView.classList.add('hidden'); // Ensure confirmation is hidden initially
                 resultDisplay.classList.add('hidden');
                 restartButton.classList.add('hidden');
             }
@@ -250,6 +348,7 @@
         // Add event listener for the "Begin Test" CTA button
         if (beginTestButton) {
             beginTestButton.addEventListener('click', () => {
+                startMusic(); // Start music on test click
                 showView('testView');
             });
         }
@@ -264,6 +363,15 @@
                 factDisplay.innerHTML = `<p class="text-slate-300">Select a category above to learn more.</p>`;
             });
         }
+
+        // --- Confirmation Button Logic (NEW) ---
+        confirmResultButton.addEventListener('click', () => {
+            // Hide confirmation and show final result
+            confirmationView.classList.add('hidden');
+            resultDisplay.innerHTML = finalResultText; // Use the stored result
+            resultDisplay.classList.remove('hidden');
+            restartButton.classList.remove('hidden');
+        });
 
         // --- Form Submission Logic ---
         
@@ -291,19 +399,16 @@
                 resultGrams = "25.7";
             }
 
-            // Display the results
-            const resultText = `
+            // Store the result text to be displayed after confirmation
+            finalResultText = `
                 <p class="text-2xl font-bold text-emerald-400 mb-3">TEST COMPLETE!</p>
                 <p>Based on our highly scientific smoke-test calculations and your deep knowledge of Eeds' habits, the true amount smoked in a single week is determined to be:</p>
                 <p class="text-5xl font-extrabold text-white mt-4">${resultGrams} GRAMS</p>
             `;
             
-            resultDisplay.innerHTML = resultText;
-            resultDisplay.classList.remove('hidden');
+            // Hide the form and show the confirmation view
             testForm.classList.add('hidden');
-            
-            // Show the restart button
-            restartButton.classList.remove('hidden');
+            confirmationView.classList.remove('hidden');
         });
 
         // Initialize view
