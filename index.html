@@ -292,6 +292,7 @@
             </div>
             
             <div class="flex justify-center mt-8">
+                <!-- This button is now wired to the Mini-Game view in JS -->
                 <button id="beginTestButton" class="cta-button">Begin Test</button>
             </div>
         </div>
@@ -347,7 +348,7 @@
                         </defs>
                         <path d="M10 250 Q 5 210, 25 200 H 75 Q 95 210, 90 250 Z" fill="url(#glassGradient)" stroke="#93c5fd" stroke-width="2" stroke-opacity="0.6"/>
                         <path d="M15 250 Q 10 220, 30 210 H 70 Q 90 220, 85 250 Z" fill="url(#waterGradient)"/>
-                        <rect x="35" y="20" width="30" height="190" fill="url(#glassGradient)" stroke="#93c5fd" stroke-width="2" stroke-opacity="0.6" rx="5"/>
+                        <rect x="35" y="20" width="30" height="190" fill="url(#glassGradient)" stroke="#93c5fd" stroke-width="2" rx="5"/>
                         <rect x="30" y="10" width="40" height="15" fill="#9333ea" stroke="#d8b4fe" stroke-width="2" rx="7"/>
                         <rect x="65" y="195" width="5" height="15" fill="#4b5563" transform="rotate(15 65 195)"/> 
                         <circle cx="78" cy="180" r="10" fill="#facc15" stroke="#f59e0b" stroke-width="2"/>
@@ -380,10 +381,10 @@
 
                 </div>
 
-                <!-- Win Bar (Hidden by default) -->
-                <div id="win-bar" class="hidden mt-4 p-4 rounded-lg text-center font-extrabold text-2xl animate-pulse readable-text-shadow" 
+                <!-- Win Bar (Hidden by default, content managed by JS) -->
+                <div id="win-bar" class="hidden mt-4 p-4 rounded-lg text-center font-extrabold text-2xl readable-text-shadow" 
                      style="background: linear-gradient(90deg, #facc15, #f59e0b, #facc15); box-shadow: 0 0 20px #facc15;">
-                    🎉 YOU SMOKED $20$ GRAMS! Eeds is High 🚀
+                    <!-- Content will be injected here -->
                 </div>
             </div>
 
@@ -478,6 +479,9 @@
         const BASE_SMOKE_DELAY = 1000; // 1 second in ms (matches puff animation)
         const BASE_XP = 50; // XP required for Level 1 -> 2
         const XP_RATE = 1.6; // Multiplier for subsequent levels
+        // FIX 2: Updated milestone reward to 150 gold
+        const MILESTONE_REWARD = 150; 
+
         
         // --- SHOP ITEM CONFIGURATION (EXPANDED & THEMED) ---
         const SHOP_ITEMS_CONFIG = [
@@ -523,7 +527,7 @@
             coinChanceLevel: 0,
             coinAmountLevel: 0,
             doubleChanceLevel: 0,
-            hasWon: false,
+            hasWon: false, // Repurposed: true if the 20g reward has been claimed
             // NEW STATS & LEVELING
             currentLevel: 1, 
             xp: 0,
@@ -534,7 +538,7 @@
         // --- FIREBASE VARIABLES ---
         let db, auth, userId = null;
         let isAuthReady = false; 
-        let isSmoking = false;
+        let isSmoking = false; // Flag to prevent rapid clicks during the animation/cooldown
         let connectionMessage = ''; 
         let isCanvasEnvironment = typeof __app_id !== 'undefined';
 
@@ -689,7 +693,7 @@
                     saveGameState(); // Create default document
                 }
                 isAuthReady = true;
-                connectionMessage = 'Connected to Eeds. Save is active.';
+                connectionMessage = 'Connected to Eeds Game. Good luck!';
                 loadingStatus.textContent = connectionMessage;
                 loadingStatus.classList.remove('bg-yellow-600/50', 'bg-red-600/50');
                 loadingStatus.classList.add('bg-emerald-600/50');
@@ -728,6 +732,28 @@
             }
             return leveledUp;
         }
+        
+        // --- NEW CLAIM REWARD FUNCTION ---
+        function claimMilestoneReward() {
+            if (gameState.gramsSmoked < WIN_GRAMS || gameState.hasWon) return; // Safety check
+
+            // Give the new 150 gold reward
+            gameState.goldCoins += MILESTONE_REWARD; 
+            gameState.goldEarnedTotal += MILESTONE_REWARD;
+            gameState.hasWon = true;
+            
+            // Play a triumphant sound for the big win
+            if(coinSynth) {
+                const now = Tone.now();
+                coinSynth.triggerAttackRelease("C6", "8n", now);
+                coinSynth.triggerAttackRelease("E6", "8n", now + 0.1); 
+                coinSynth.triggerAttackRelease("G6", "8n", now + 0.2);
+            }
+            
+            saveGameState();
+            updateUI(); // This will refresh the bar to show the claimed status
+        }
+        // --- END NEW CLAIM REWARD FUNCTION ---
 
         // --- GAME LOGIC ---
         function updateUI() {
@@ -757,16 +783,31 @@
             statXpToNext.textContent = requiredXP - currentXP;
 
 
-            if (gameState.gramsSmoked >= WIN_GRAMS && !gameState.hasWon) {
-                gameState.hasWon = true;
-                saveGameState();
-            }
-
-            if (gameState.hasWon) {
+            // --- FIX 1: 20G Milestone logic with CLAIM button ---
+            if (gameState.gramsSmoked >= WIN_GRAMS) {
                 winBar.classList.remove('hidden');
+                if (!gameState.hasWon) {
+                    // Milestone reached, show CLAIM button
+                    winBar.innerHTML = `
+                        <p class="animate-pulse">🎉 EEDS JUST SMOKED ${WIN_GRAMS} GRAMS! REWARD AVAILABLE! 🚀</p>
+                        <button id="claimRewardButton" class="mt-3 px-6 py-2 bg-red-600 text-white font-bold rounded-full shadow-lg hover:bg-red-700 transition">
+                            CLAIM REWARD! (+${MILESTONE_REWARD} 💰)
+                        </button>
+                    `;
+                    // Attach listener for the new button
+                    document.getElementById('claimRewardButton')?.addEventListener('click', claimMilestoneReward);
+
+                } else {
+                    // Milestone claimed, show confirmed message
+                    winBar.innerHTML = `
+                        <p class="text-xl">✅ MILESTONE CLAIMED: ${WIN_GRAMS} GRAMS SMOKED!</p>
+                        <p class="text-sm text-yellow-800 font-normal">You earned ${MILESTONE_REWARD} gold!</p>
+                    `;
+                }
             } else {
                 winBar.classList.add('hidden');
             }
+            // -----------------------------------------------------------------------
         }
 
         function getShopItemState(itemConfig) {
@@ -894,18 +935,23 @@
         function triggerBongHit() {
             const smokeDelay = getSmokeDelay();
             
+            // CRITICAL: Block clicks if a hit is already in progress or the cooldown is active
             if (isSmoking) {
-                console.log(`Click blocked: Waiting for ${smokeDelay.toFixed(0)}ms cooldown.`);
                 return;
             }
-            if (gameState.hasWon || !isAuthReady) return; 
+            if (!isAuthReady) return; 
+
+            // Initialize Tone context on first interaction if it hasn't started (Chrome/Safari requirement)
+            if (Tone.context.state !== 'running') {
+                Tone.start();
+            }
 
             const doubleHitChance = getCalculatedDoubleChance();
             const isDoubleHit = Math.random() < doubleHitChance;
             let currentHitSize = getRandomHitSize();
             let coinReward = 0;
             
-            isSmoking = true; // Block subsequent clicks immediately
+            isSmoking = true; // Set cooldown flag immediately
             
             // --- 1. GAME UPDATE LOGIC ---
 
@@ -918,9 +964,15 @@
             const coinDropChance = getCalculatedCoinChance();
             if (Math.random() < coinDropChance) {
                 coinReward = getCalculatedCoinAmount();
+                
+                // Play two quick, successive notes for a "jingle" instead of a chord
                 if (isDoubleHit) {
                     coinReward *= 2;
-                    if(coinSynth) coinSynth.triggerAttackRelease(["G5", "C6"], "8n", Tone.now() + 0.1); 
+                    if(coinSynth) {
+                        const now = Tone.now();
+                        coinSynth.triggerAttackRelease("G5", "16n", now + 0.1);
+                        coinSynth.triggerAttackRelease("C6", "16n", now + 0.15); 
+                    }
                 } else {
                     if(coinSynth) coinSynth.triggerAttackRelease("G5", "16n", Tone.now() + 0.1);
                 }
@@ -984,13 +1036,20 @@
 
             // --- 5. CLEANUP & SAVE ---
             setTimeout(() => {
-                eedsCharacter.classList.remove('smoking');
-                isSmoking = false; // Reset the cooldown flag
-                if (puff.parentElement) puff.remove(); 
-                if (message.parentElement) message.remove();
-                
-                saveGameState();
-                updateUI();
+                // Use try...finally to guarantee isSmoking is reset even if an element is missing
+                try {
+                    eedsCharacter.classList.remove('smoking');
+                    if (puff.parentElement) puff.remove(); 
+                    if (message.parentElement) message.remove();
+                    
+                    saveGameState();
+                    updateUI();
+                } catch (e) {
+                    // Log error but continue to reset the cooldown flag
+                    console.error("Game cleanup failed during rapid clicking, but cooldown is forced to reset.", e);
+                } finally {
+                    isSmoking = false; // CRITICAL: This ensures the next click is allowed
+                }
             }, smokeDelay); 
         }
         
@@ -1051,6 +1110,11 @@
             await initFirebase();
             showView('infoView'); 
             
+            // FIX 3: Event listener for "Begin Test" button to switch to the minigame view
+            document.getElementById('beginTestButton').addEventListener('click', () => {
+                showView('minigameView');
+            });
+
             // FIX 1: Add event listeners for navigation buttons
             document.getElementById('navInfoButton').addEventListener('click', () => showView('infoView'));
             document.getElementById('navMinigameButton').addEventListener('click', () => showView('minigameView'));
