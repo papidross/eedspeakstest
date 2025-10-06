@@ -45,7 +45,7 @@
             background-color: transparent; 
             border-radius: 16px;
             padding: 32px;
-            max-width: 800px;
+            max-width: 1000px; /* Increased max width for the new layout */
             width: 100%;
             position: relative; 
             z-index: 10;
@@ -125,12 +125,13 @@
         }
         #eeds-character {
             cursor: pointer;
+            user-select: none; /* Prevent text selection */
             transition: transform 0.1s, rotate 0.3s ease-out;
         }
         #eeds-character.smoking {
             transform: translateX(-5px) rotate(-10deg) scale(1.05); 
         }
-        /* INHALE PUFF (Coming from the bong) */
+        
         @keyframes puff {
             0% { transform: translate(-50%, 0) scale(0.2); opacity: 0; }
             50% { opacity: 1; }
@@ -138,7 +139,7 @@
         }
         .smoke-puff {
             position: absolute;
-            bottom: 250px; 
+            bottom: 290px; 
             left: 50%;
             transform: translate(-50%, 0);
             width: 30px;
@@ -150,15 +151,13 @@
             animation: puff 1s ease-out forwards;
         }
 
-        /* EXHALE PUFF (Coming from Eeds' head) */
         @keyframes exhale {
             0% { transform: translate(0, 0) scale(0.1); opacity: 0.5; }
             100% { transform: translate(30px, -80px) scale(1.5); opacity: 0; }
         }
         .smoke-exhale {
             position: absolute;
-            /* Positioned near Eeds' head: right side, elevated */
-            bottom: 180px; 
+            bottom: 220px; 
             right: 40%;
             width: 40px;
             height: 40px;
@@ -170,31 +169,33 @@
             z-index: 20;
         }
 
-        /* Message Fade Up (Adjusted for "lower and more to the left") */
         @keyframes fade-up-left {
-            /* Start slightly lower */
             0% { opacity: 0; transform: translate(-0px, 10px) scale(0.8); } 
-            /* Shift left/up slightly */
             50% { opacity: 1; transform: translate(-30px, -10px) scale(1); } 
-            /* Shift further left/up, this controls the floating path */
             100% { opacity: 0; transform: translate(-60px, -50px) scale(1.2); } 
         }
         .hit-message {
-            /* This is the starting point for the animation */
             position: absolute;
             top: 50%;
-            left: 30%; /* Start physically to the left of the action area */
+            left: 30%; 
             transform: translateY(-50%); 
             font-weight: 800;
             white-space: nowrap;
             pointer-events: none;
             z-index: 50;
-            opacity: 0; /* Opacity set by keyframe */
+            opacity: 0; 
         }
 
+        .weed-game-bg {
+            background-color: #1c322b;
+            background-image: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.2) 0%, rgba(30, 41, 59, 0) 70%), 
+                              repeating-linear-gradient(135deg, rgba(20, 83, 45, 0.1) 0px, rgba(20, 83, 45, 0.1) 1px, transparent 1px, transparent 5px);
+            border: 3px solid #10b981;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
+        }
 
         .shop-item {
-            background-color: rgba(30, 41, 59, 0.7); /* Slate-800 semi-transparent */
+            background-color: rgba(30, 41, 59, 0.7); 
             border: 2px solid #a855f7;
         }
         .shop-buy-button {
@@ -211,6 +212,32 @@
             background-color: #4b5563;
             cursor: not-allowed;
             opacity: 0.7;
+        }
+        
+        .stat-card {
+            background-color: rgba(30, 41, 59, 0.8);
+            border: 2px solid #a855f7;
+            padding: 16px;
+            border-radius: 12px;
+        }
+        .stat-item {
+            padding: 8px 0;
+            border-bottom: 1px dashed #4a5568;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .level-bar-container {
+            height: 12px;
+            background-color: #4a5568;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .level-bar {
+            height: 100%;
+            background-color: #10b981;
+            transition: width 0.3s ease-out;
         }
     </style>
 </head>
@@ -247,7 +274,6 @@
         </div>
 
         <!-- FIREBASE LOADING STATUS -->
-        <!-- Added 'hidden' class here, visibility controlled by JS showView function -->
         <div id="loadingStatus" class="text-center text-white text-lg readable-text-shadow p-4 bg-emerald-600/50 rounded-lg mb-6 hidden">
             <!-- Text content set by JS -->
         </div>
@@ -276,99 +302,127 @@
             <p class="text-slate-400 text-center readable-text-shadow mt-2">Use the Mini-Game tab to play and earn coins.</p>
         </div>
         
-        <!-- MINIGAME VIEW -->
-        <div id="minigameView" class="hidden text-center">
-            <h2 class="text-3xl font-extrabold text-white mb-6 tracking-wider glow-text readable-text-shadow">
-                EEDS SMOKE MINI-GAME
-            </h2>
+        <!-- MINIGAME VIEW - UPDATED GRID LAYOUT -->
+        <div id="minigameView" class="hidden text-center grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <!-- INSTRUCTION BOX -->
-            <div class="bg-indigo-900/50 p-3 rounded-xl border-2 border-indigo-500 mb-8 shadow-xl readable-text-shadow mx-auto max-w-sm">
-                <p class="text-xl font-bold text-white uppercase tracking-wider">
-                    CLICK ON EEDSPEAKS to help him take a hit!
-                </p>
-            </div>
-            
-            <!-- Game Area Container -->
-            <div class="flex justify-center items-end relative h-80 w-full overflow-hidden">
-                
-                <!-- Counters Display -->
-                <div id="counters" class="absolute top-0 left-0 right-0 p-2 flex justify-around text-white font-bold text-lg bg-black/30 rounded-t-lg readable-text-shadow">
-                    <div id="hit-counter">Hits: 0</div>
-                    <div id="gram-counter">Grams Smoked: 0.0g</div>
-                    <!-- Coin Counter -->
-                    <div id="coin-counter" class="text-yellow-400">Coins: 0 💰</div> 
+            <!-- Game Area (Column 1 and 2 on large screens) -->
+            <div class="lg:col-span-2 space-y-4">
+                <h2 class="text-3xl font-extrabold text-white tracking-wider glow-text readable-text-shadow">
+                    EEDS SMOKE MINI-GAME
+                </h2>
+
+                <!-- Game Area Container -->
+                <div id="gameArea" class="weed-game-bg flex justify-center items-end relative h-[448px] w-full overflow-hidden rounded-xl">
+                    
+                    <!-- Counters Display -->
+                    <div id="counters" class="absolute top-0 left-0 right-0 p-2 flex justify-around text-white font-bold text-lg bg-black/50 rounded-t-xl readable-text-shadow">
+                        <div id="hit-counter">Hits: 0</div>
+                        <div id="gram-counter">Grams Smoked: 0.0g</div>
+                        <div id="coin-counter" class="text-yellow-400">Coins: 0 💰</div> 
+                    </div>
+
+                    <!-- Level & XP Bar Display -->
+                    <div class="absolute top-[55px] left-0 right-0 px-4">
+                        <div class="flex justify-between text-xs font-semibold text-white/80 readable-text-shadow">
+                            <span id="level-display">LEVEL 1</span>
+                            <span id="xp-display">0 / 50 XP</span>
+                        </div>
+                        <div class="level-bar-container border-2 border-emerald-400">
+                            <div id="level-bar" class="level-bar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+
+                    <!-- Bong Icon (Inline SVG) -->
+                    <svg id="cosmic-bong" class="w-32 h-64 absolute bottom-[40px] right-1/2 translate-x-1/2 mr-10" viewBox="0 0 100 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <radialGradient id="glassGradient" cx="50%" cy="50%" r="50%" fx="60%" fy="60%">
+                                <stop offset="0%" style="stop-color:rgb(255,255,255);stop-opacity:0.8" />
+                                <stop offset="100%" style="stop-color:rgb(192,236,255);stop-opacity:0.3" />
+                            </radialGradient>
+                            <linearGradient id="waterGradient" x1="0" y1="200" x2="0" y2="250" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#3b82f6"/>
+                                <stop offset="1" stop-color="#0ea5e9" stop-opacity="0.5"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M10 250 Q 5 210, 25 200 H 75 Q 95 210, 90 250 Z" fill="url(#glassGradient)" stroke="#93c5fd" stroke-width="2" stroke-opacity="0.6"/>
+                        <path d="M15 250 Q 10 220, 30 210 H 70 Q 90 220, 85 250 Z" fill="url(#waterGradient)"/>
+                        <rect x="35" y="20" width="30" height="190" fill="url(#glassGradient)" stroke="#93c5fd" stroke-width="2" stroke-opacity="0.6" rx="5"/>
+                        <rect x="30" y="10" width="40" height="15" fill="#9333ea" stroke="#d8b4fe" stroke-width="2" rx="7"/>
+                        <rect x="65" y="195" width="5" height="15" fill="#4b5563" transform="rotate(15 65 195)"/> 
+                        <circle cx="78" cy="180" r="10" fill="#facc15" stroke="#f59e0b" stroke-width="2"/>
+                        <circle cx="50" cy="225" r="5" fill="#e0f2fe" fill-opacity="0.8"/>
+                        <circle cx="40" cy="235" r="3" fill="#e0f2fe" fill-opacity="0.8"/>
+                    </svg>
+
+                    <!-- Eeds Character (Updated Livelier Look) -->
+                    <svg id="eeds-character" class="w-32 h-64 absolute bottom-[40px] right-1/2 translate-x-1/2 ml-10" viewBox="0 0 150 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="transition: transform 0.2s, rotate 0.2s;">
+                        <!-- Head (Slightly detailed face) -->
+                        <circle cx="120" cy="20" r="15" fill="#fef08a" stroke="#f59e0b" stroke-width="2"/>
+                        <circle cx="115" cy="18" r="1.5" fill="#333"/>
+                        <circle cx="125" cy="18" r="1.5" fill="#333"/>
+                        <path d="M115 25 Q 120 28, 125 25" stroke="#f59e0b" stroke-width="1.5" fill="none"/>
+                        <!-- Hair/Hat -->
+                        <path d="M108 8 Q 120 -5, 132 8 C 130 15, 120 18, 110 15 Z" fill="#444" stroke="#333" stroke-width="1"/>
+                        <!-- Body (Green Hoodie) -->
+                        <rect x="110" y="35" width="20" height="85" fill="#10b981" rx="5"/>
+                        <!-- Arms (Holding Bong) -->
+                        <path d="M120 50 L100 70 L95 100" stroke="#fef08a" stroke-width="5" stroke-linecap="round" fill="none"/>
+                        <!-- Legs -->
+                        <line x1="120" y1="120" x2="100" y2="150" stroke="#fef08a" stroke-width="5" stroke-linecap="round"/>
+                        <line x1="120" y1="120" x2="140" y2="150" stroke="#fef08a" stroke-width="5" stroke-linecap="round"/>
+                    </svg>
+                    
+                    <!-- CLICK INSTRUCTION TEXT -->
+                    <p id="click-instruction" class="absolute bottom-[10px] left-1/2 transform -translate-x-1/2 text-lg font-bold text-lime-300 readable-text-shadow z-30 tracking-wider uppercase">
+                        CLICK ON EEDSPEAKS
+                    </p>
+
                 </div>
 
-                <!-- Bong Icon (Inline SVG - Realistic Design) -->
-                <svg id="cosmic-bong" class="w-32 h-64 absolute bottom-0 right-1/2 translate-x-1/2 mr-10" viewBox="0 0 100 250" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <!-- Glass Gradient -->
-                        <radialGradient id="glassGradient" cx="50%" cy="50%" r="50%" fx="60%" fy="60%">
-                            <stop offset="0%" style="stop-color:rgb(255,255,255);stop-opacity:0.8" />
-                            <stop offset="100%" style="stop-color:rgb(192,236,255);stop-opacity:0.3" />
-                        </radialGradient>
-                        <!-- Water Fill -->
-                        <linearGradient id="waterGradient" x1="0" y1="200" x2="0" y2="250" gradientUnits="userSpaceOnUse">
-                            <stop stop-color="#3b82f6"/>
-                            <stop offset="1" stop-color="#0ea5e9" stop-opacity="0.5"/>
-                        </linearGradient>
-                    </defs>
-
-                    <!-- Beaker Base (Glass) -->
-                    <path d="M10 250 Q 5 210, 25 200 H 75 Q 95 210, 90 250 Z" fill="url(#glassGradient)" stroke="#93c5fd" stroke-width="2" stroke-opacity="0.6"/>
-
-                    <!-- Water in Base -->
-                    <path d="M15 250 Q 10 220, 30 210 H 70 Q 90 220, 85 250 Z" fill="url(#waterGradient)"/>
-                    
-                    <!-- Neck (Straight Tube) -->
-                    <rect x="35" y="20" width="30" height="190" fill="url(#glassGradient)" stroke="#93c5fd" stroke-width="2" stroke-opacity="0.6" rx="5"/>
-                    
-                    <!-- Mouthpiece Rim (Purple) -->
-                    <rect x="30" y="10" width="40" height="15" fill="#9333ea" stroke="#d8b4fe" stroke-width="2" rx="7"/>
-
-                    <!-- Downstem Connector -->
-                    <rect x="65" y="195" width="5" height="15" fill="#4b5563" transform="rotate(15 65 195)"/> 
-
-                    <!-- Bowl (The hot part, yellow/orange) -->
-                    <circle cx="78" cy="180" r="10" fill="#facc15" stroke="#f59e0b" stroke-width="2"/>
-                    
-                    <!-- Perculator effect (Small bubbles in the water area) -->
-                    <circle cx="50" cy="225" r="5" fill="#e0f2fe" fill-opacity="0.8"/>
-                    <circle cx="40" cy="235" r="3" fill="#e0f2fe" fill-opacity="0.8"/>
-                </svg>
-
-                <!-- Eeds Character (Updated Livelier Look) -->
-                <svg id="eeds-character" class="w-32 h-64 absolute bottom-0 right-1/2 translate-x-1/2 ml-10" viewBox="0 0 150 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="transition: transform 0.2s, rotate 0.2s;">
-                    <!-- Head (Slightly detailed face) -->
-                    <circle cx="120" cy="20" r="15" fill="#fef08a" stroke="#f59e0b" stroke-width="2"/>
-                    <circle cx="115" cy="18" r="1.5" fill="#333"/>
-                    <circle cx="125" cy="18" r="1.5" fill="#333"/>
-                    <path d="M115 25 Q 120 28, 125 25" stroke="#f59e0b" stroke-width="1.5" fill="none"/>
-                    <!-- Hair/Hat -->
-                    <path d="M108 8 Q 120 -5, 132 8 C 130 15, 120 18, 110 15 Z" fill="#444" stroke="#333" stroke-width="1"/>
-                    <!-- Body (Green Hoodie) -->
-                    <rect x="110" y="35" width="20" height="85" fill="#10b981" rx="5"/>
-                    <!-- Arms (Holding Bong) -->
-                    <path d="M120 50 L100 70 L95 100" stroke="#fef08a" stroke-width="5" stroke-linecap="round" fill="none"/>
-                    <!-- Legs -->
-                    <line x1="120" y1="120" x2="100" y2="150" stroke="#fef08a" stroke-width="5" stroke-linecap="round"/>
-                    <line x1="120" y1="120" x2="140" y2="150" stroke="#fef08a" stroke-width="5" stroke-linecap="round"/>
-                </svg>
-
+                <!-- Win Bar (Hidden by default) -->
+                <div id="win-bar" class="hidden mt-4 p-4 rounded-lg text-center font-extrabold text-2xl animate-pulse readable-text-shadow" 
+                     style="background: linear-gradient(90deg, #facc15, #f59e0b, #facc15); box-shadow: 0 0 20px #facc15;">
+                    🎉 YOU SMOKED $20$ GRAMS! Eeds is High 🚀
+                </div>
             </div>
 
-            <!-- Win Bar (Hidden by default) -->
-            <div id="win-bar" class="hidden mt-4 p-4 rounded-lg text-center font-extrabold text-2xl animate-pulse readable-text-shadow" 
-                 style="background: linear-gradient(90deg, #facc15, #f59e0b, #facc15); box-shadow: 0 0 20px #facc15;">
-                🎉 YOU SMOKED $20$ GRAMS! Eeds is High 🚀
+            <!-- Stats Panel (Column 3 on large screens) -->
+            <div class="lg:col-span-1 space-y-4">
+                <h3 class="text-2xl font-bold text-white text-center readable-text-shadow">
+                    MY SMOKING PROFILE
+                </h3>
+                <div class="stat-card">
+                    <p class="text-lg font-bold text-yellow-400 text-center mb-2">
+                        LEVEL <span id="current-level-stat">1</span>
+                    </p>
+                    <div class="stat-item">
+                        <span class="text-slate-300">Total Hits Taken</span>
+                        <span id="stat-hits-taken" class="font-extrabold text-emerald-400">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="text-slate-300">Total Gold Earned</span>
+                        <span id="stat-gold-earned" class="font-extrabold text-yellow-400">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="text-slate-300">Biggest Hit (g)</span>
+                        <span id="stat-biggest-hit" class="font-extrabold text-red-400">0.0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="text-slate-300">XP Until Next Level</span>
+                        <span id="stat-xp-to-next" class="font-extrabold text-fuchsia-400">0</span>
+                    </div>
+                </div>
             </div>
+            <!-- End Stats Panel -->
+
         </div>
+        <!-- END MINIGAME VIEW -->
 
         <!-- SHOP VIEW -->
         <div id="shopView" class="hidden">
             <h2 class="text-3xl font-extrabold text-white mb-4 tracking-wider glow-text readable-text-shadow text-center">
-                EEDSPEAKS SMOKE UPGRADES <!-- UPDATED TEXT HERE -->
+                EEDSPEAKS SMOKE UPGRADES
             </h2>
             
             <!-- GOLD COUNTER -->
@@ -394,9 +448,10 @@
         
         // =========================================================================
         // !!! FIREBASE CONFIGURATION (OFFLINE FALLBACK ACTIVATED) !!!
-        // App will run in offline mode using this config for path construction.
         // =========================================================================
         const USER_FIREBASE_CONFIG = {
+            // These values are placeholders; Canvas provides real values at runtime.
+            // Leaving them here as a fallback structure.
             apiKey: "AIzaSyD8RzspQnRmBvj037H5DTuwM6MDh3Uj8", 
             authDomain: "eeds-smoke-game.firebaseapp.com", 
             projectId: "eeds-smoke-game", 
@@ -421,12 +476,13 @@
         const BASE_MIN_HIT = 0.1;
         const BASE_MAX_HIT = 0.5;
         const BASE_SMOKE_DELAY = 1000; // 1 second in ms (matches puff animation)
+        const BASE_XP = 50; // XP required for Level 1 -> 2
+        const XP_RATE = 1.6; // Multiplier for subsequent levels
         
         // --- SHOP ITEM CONFIGURATION (EXPANDED & THEMED) ---
         const SHOP_ITEMS_CONFIG = [
             { id: 'gram_boost', name: 'Grinder Upgrade', desc: 'Increases Max Hit by +0.1g', baseCost: 50, gramBoost: 0.1, maxPurchases: 5, icon: '🔥' },
             { id: 'speed_boost', name: 'Fast Lighter', desc: 'Reduces Hit Delay by -10%', baseCost: 100, speedBoost: 0.1, maxPurchases: 5, icon: '⚡' },
-            // THEMED ITEMS
             { id: 'coin_chance', name: 'Hydroponic Setup', desc: 'Increases Coin Drop Chance by +5%', baseCost: 150, coinChanceBoost: 0.05, maxPurchases: 4, icon: '🌱' },
             { id: 'coin_amount', name: 'Munchies Fund', desc: 'Increases Coin Drop Amount by +10', baseCost: 200, coinAmountBoost: 10, maxPurchases: 5, icon: '🍔' },
             { id: 'double_chance', name: 'Concentrate Cart', desc: 'Increases Double Hit Chance by +2%', baseCost: 300, doubleChanceBoost: 0.02, maxPurchases: 5, icon: '🍯' },
@@ -447,6 +503,16 @@
         const loadingStatus = document.getElementById('loadingStatus');
         const shopItemsContainer = document.getElementById('shopItemsContainer');
 
+        // NEW STATS ELEMENTS
+        const levelDisplay = document.getElementById('level-display');
+        const xpDisplay = document.getElementById('xp-display');
+        const levelBar = document.getElementById('level-bar');
+        const currentLevelStat = document.getElementById('current-level-stat');
+        const statHitsTaken = document.getElementById('stat-hits-taken');
+        const statGoldEarned = document.getElementById('stat-gold-earned');
+        const statBiggestHit = document.getElementById('stat-biggest-hit');
+        const statXpToNext = document.getElementById('stat-xp-to-next');
+
         // --- GAME STATE (Synced with Firebase) ---
         let gameState = {
             hits: 0,
@@ -457,14 +523,20 @@
             coinChanceLevel: 0,
             coinAmountLevel: 0,
             doubleChanceLevel: 0,
-            hasWon: false
+            hasWon: false,
+            // NEW STATS & LEVELING
+            currentLevel: 1, 
+            xp: 0,
+            goldEarnedTotal: 0, 
+            biggestHit: 0.0
         };
         
         // --- FIREBASE VARIABLES ---
         let db, auth, userId = null;
         let isAuthReady = false; 
         let isSmoking = false;
-        let connectionMessage = ''; // Variable to hold the connection text
+        let connectionMessage = ''; 
+        let isCanvasEnvironment = typeof __app_id !== 'undefined';
 
         // --- AUDIO/TONE.JS SETUP (Minimal for SFX) ---
         let clickSynth = null;
@@ -473,7 +545,6 @@
         
         function initSynths() {
             if (clickSynth) return;
-            // Only start audio if a user interaction has occurred
             document.body.addEventListener('click', () => {
                 if (Tone.context.state !== 'running') {
                     Tone.start();
@@ -503,61 +574,65 @@
         // --- FIREBASE INITIALIZATION & AUTH ---
 
         async function initFirebase() {
-            // Set the connection message and styling once, but visibility is controlled by showView
-            connectionMessage = 'Connected to eeds game, good luck!';
-            loadingStatus.textContent = connectionMessage;
-            loadingStatus.classList.add('bg-emerald-600/50', 'text-emerald-200');
-            loadingStatus.classList.remove('bg-black/50', 'bg-red-600/50', 'bg-yellow-600/50');
-            isAuthReady = true; 
+            if (!isCanvasEnvironment) {
+                console.log("Not in Canvas environment. Running with local fallbacks.");
+                isAuthReady = true;
+                updateUI();
+                renderShop();
+                return;
+            }
 
             try {
-                if (typeof window.firebase === 'undefined' || !USER_FIREBASE_CONFIG.projectId) {
-                    listenToGameData(); 
-                    return; 
-                }
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
                 
-                const { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore } = window.firebase;
+                const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore } = window.firebase;
                 
-                const firebaseConfig = USER_FIREBASE_CONFIG;
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
                 
-                await signInAnonymously(auth);
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
 
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
-                        listenToGameData();
+                        listenToGameData(appId);
                     } 
                 });
 
             } catch (error) {
-                console.error("Firebase Initialization Error (Game continues in offline mode):", error);
-                listenToGameData();
+                console.error("Firebase Initialization Error:", error);
+                isAuthReady = true;
+                updateUI();
+                renderShop();
             }
         }
 
         // --- FIRESTORE DATA HANDLING ---
         
-        function getGameDataRef() {
-            // Use the Project ID for the app ID since __app_id is unavailable
-            const appId = USER_FIREBASE_CONFIG.projectId || 'github-smoke-shop'; 
-
+        function getGameDataRef(appId) {
             if (!db || !userId) {
                 return null;
             }
-            return window.firebase.doc(db, 'artifacts', appId, 'users', userId, 'game_data', 'eedspeaks_profile');
+            return window.firebase.doc(db, `artifacts/${appId}/users/${userId}/game_data/eedspeaks_profile`);
         }
 
         async function saveGameState() {
-            if (!isAuthReady || !db || !userId) {
+            if (!isAuthReady || !db || !userId || !isCanvasEnvironment) {
                 return;
             }
-            const docRef = getGameDataRef();
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const docRef = getGameDataRef(appId);
             if (!docRef) return;
 
             try {
+                // Ensure gramsSmoked and biggestHit are stored as numbers (or strings if Firestore handles the float better)
                 const dataToSave = {
                     hits: gameState.hits,
                     gramsSmoked: gameState.gramsSmoked,
@@ -567,7 +642,12 @@
                     coinChanceLevel: gameState.coinChanceLevel,
                     coinAmountLevel: gameState.coinAmountLevel,
                     doubleChanceLevel: gameState.doubleChanceLevel,
-                    hasWon: gameState.hasWon
+                    hasWon: gameState.hasWon,
+                    // NEW STATS & LEVELING SAVE
+                    currentLevel: gameState.currentLevel,
+                    xp: gameState.xp,
+                    goldEarnedTotal: gameState.goldEarnedTotal,
+                    biggestHit: gameState.biggestHit
                 };
                 await window.firebase.setDoc(docRef, dataToSave, { merge: true });
             } catch (error) {
@@ -575,9 +655,12 @@
             }
         }
 
-        function listenToGameData() {
-            const docRef = getGameDataRef();
+        function listenToGameData(appId) {
+            if (!isCanvasEnvironment) return;
+
+            const docRef = getGameDataRef(appId);
             if (!docRef) {
+                isAuthReady = true;
                 updateUI(); 
                 renderShop();
                 return;
@@ -595,29 +678,83 @@
                         coinChanceLevel: data.coinChanceLevel || 0,
                         coinAmountLevel: data.coinAmountLevel || 0,
                         doubleChanceLevel: data.doubleChanceLevel || 0,
-                        hasWon: data.hasWon || false
+                        hasWon: data.hasWon || false,
+                        // NEW STATS & LEVELING LOAD
+                        currentLevel: data.currentLevel || 1,
+                        xp: data.xp || 0,
+                        goldEarnedTotal: data.goldEarnedTotal || 0,
+                        biggestHit: parseFloat(data.biggestHit) || 0.0
                     };
                 } else {
-                    saveGameState(); 
+                    saveGameState(); // Create default document
                 }
+                isAuthReady = true;
+                connectionMessage = 'Connected to Eeds. Save is active.';
+                loadingStatus.textContent = connectionMessage;
+                loadingStatus.classList.remove('bg-yellow-600/50', 'bg-red-600/50');
+                loadingStatus.classList.add('bg-emerald-600/50');
+
                 updateUI();
                 renderShop(); 
             }, (error) => {
                 console.error("Firestore listen error:", error);
+                isAuthReady = true;
+                connectionMessage = 'Error loading stats. Playing offline.';
+                loadingStatus.textContent = connectionMessage;
+                loadingStatus.classList.remove('bg-emerald-600/50', 'bg-red-600/50');
+                loadingStatus.classList.add('bg-yellow-600/50');
                 updateUI();
                 renderShop();
             });
         }
         
+        // --- LEVELING LOGIC ---
+        function xpForNextLevel(level) {
+            // XP scales exponentially: 50 * 1.6^(level-1)
+            return Math.floor(BASE_XP * Math.pow(XP_RATE, level - 1));
+        }
+
+        function checkLevelUp() {
+            let leveledUp = false;
+            let requiredXP = xpForNextLevel(gameState.currentLevel);
+
+            while (gameState.xp >= requiredXP) {
+                gameState.xp -= requiredXP;
+                gameState.currentLevel += 1;
+                requiredXP = xpForNextLevel(gameState.currentLevel);
+                leveledUp = true;
+                // Optional: show a Level Up message (could implement a modal later)
+                console.log(`Leveled Up! New Level: ${gameState.currentLevel}`);
+            }
+            return leveledUp;
+        }
+
         // --- GAME LOGIC ---
         function updateUI() {
+            const currentLevel = gameState.currentLevel;
+            const currentXP = gameState.xp;
+            const requiredXP = xpForNextLevel(currentLevel);
+
+            // General Counters
             hitCounterDisplay.textContent = `Hits: ${gameState.hits}`;
             gramCounterDisplay.textContent = `Grams Smoked: ${gameState.gramsSmoked.toFixed(1)}g`;
             coinCounterDisplay.textContent = `Coins: ${gameState.goldCoins} 💰`;
-
             if (shopCoinCounter) {
                  shopCoinCounter.textContent = gameState.goldCoins; 
             }
+
+            // Leveling/XP Bar
+            const xpProgress = (currentXP / requiredXP) * 100;
+            levelDisplay.textContent = `LEVEL ${currentLevel}`;
+            xpDisplay.textContent = `${currentXP} / ${requiredXP} XP`;
+            levelBar.style.width = `${Math.min(100, xpProgress)}%`;
+
+            // Stats Panel
+            currentLevelStat.textContent = currentLevel;
+            statHitsTaken.textContent = gameState.hits;
+            statGoldEarned.textContent = gameState.goldEarnedTotal;
+            statBiggestHit.textContent = gameState.biggestHit.toFixed(1);
+            statXpToNext.textContent = requiredXP - currentXP;
 
 
             if (gameState.gramsSmoked >= WIN_GRAMS && !gameState.hasWon) {
@@ -642,6 +779,7 @@
                 case 'double_chance': currentLevel = gameState.doubleChanceLevel; break;
             }
 
+            // Cost increases linearly: baseCost * (Level + 1)
             const cost = itemConfig.baseCost * (currentLevel + 1);
             const isMaxed = currentLevel >= itemConfig.maxPurchases;
             
@@ -754,14 +892,20 @@
         }
 
         function triggerBongHit() {
-            if (isSmoking || gameState.hasWon || !isAuthReady) return; 
+            const smokeDelay = getSmokeDelay();
+            
+            if (isSmoking) {
+                console.log(`Click blocked: Waiting for ${smokeDelay.toFixed(0)}ms cooldown.`);
+                return;
+            }
+            if (gameState.hasWon || !isAuthReady) return; 
 
             const doubleHitChance = getCalculatedDoubleChance();
             const isDoubleHit = Math.random() < doubleHitChance;
             let currentHitSize = getRandomHitSize();
             let coinReward = 0;
             
-            isSmoking = true;
+            isSmoking = true; // Block subsequent clicks immediately
             
             // --- 1. GAME UPDATE LOGIC ---
 
@@ -781,12 +925,20 @@
                     if(coinSynth) coinSynth.triggerAttackRelease("G5", "16n", Tone.now() + 0.1);
                 }
             }
-
+            
+            // Calculate XP based on hit size, scaled by level
+            const xpGained = Math.round(currentHitSize * 10 * gameState.currentLevel / 2);
+            
 
             gameState.hits += 1;
             gameState.gramsSmoked = parseFloat((gameState.gramsSmoked + currentHitSize).toFixed(2));
             gameState.goldCoins += coinReward;
-
+            
+            // NEW STATS UPDATES
+            gameState.goldEarnedTotal += coinReward;
+            gameState.biggestHit = Math.max(gameState.biggestHit, currentHitSize);
+            gameState.xp += xpGained;
+            checkLevelUp();
 
             // --- 2. VISUALS & SFX (Inhale) ---
             eedsCharacter.classList.add('smoking');
@@ -796,7 +948,7 @@
             
             const puff = document.createElement('div');
             puff.classList.add('smoke-puff');
-            const gameArea = document.querySelector('#minigameView .flex.relative');
+            const gameArea = document.querySelector('#minigameView .weed-game-bg');
             if (gameArea) gameArea.appendChild(puff); 
 
             // --- 3. Hit Message Display ---
@@ -805,6 +957,7 @@
             if (isDoubleHit) {
                 messageText = `🔥 DOUBLE HIT! ${currentHitSize.toFixed(1)}g!`;
             }
+            messageText += ` (+${xpGained} XP)`;
             if (coinReward > 0) {
                 messageText += ` (+${coinReward} 💰)`;
             }
@@ -816,12 +969,11 @@
             minigameView.appendChild(message);
 
             // --- 4. SCHEDULE EXHALE ANIMATION ---
-            const smokeDelay = getSmokeDelay();
 
             setTimeout(() => {
                 const exhalePuff = document.createElement('div');
                 exhalePuff.classList.add('smoke-exhale');
-                const gameArea = document.querySelector('#minigameView .flex.relative');
+                const gameArea = document.querySelector('#minigameView .weed-game-bg');
                 if (gameArea) gameArea.appendChild(exhalePuff); 
 
                 setTimeout(() => {
@@ -831,10 +983,9 @@
             }, smokeDelay); 
 
             // --- 5. CLEANUP & SAVE ---
-            // Reset character lean/inhale puff after the full inhale duration
             setTimeout(() => {
                 eedsCharacter.classList.remove('smoking');
-                isSmoking = false;
+                isSmoking = false; // Reset the cooldown flag
                 if (puff.parentElement) puff.remove(); 
                 if (message.parentElement) message.remove();
                 
@@ -858,41 +1009,34 @@
             }
 
             document.querySelectorAll('.nav-button').forEach(btn => {
-                btn.classList.remove('bg-fuchsia-600', 'shadow-lg');
+                // Reset all to default green style
                 btn.style.setProperty('background-image', 'linear-gradient(to right, #10b981, #059669)', 'important');
-                btn.classList.remove('!bg-yellow-500', 'hover:!bg-yellow-600');
+                btn.classList.remove('!bg-fuchsia-600', 'hover:!bg-fuchsia-700', '!shadow-fuchsia-500/50');
+                btn.classList.remove('!bg-yellow-500', 'hover:!bg-yellow-600', '!shadow-yellow-500/50');
             });
             
             const buttonMap = {
-                'infoView': document.getElementById('navInfoButton'),
-                'minigameView': document.getElementById('navMinigameButton'),
-                'shopView': document.getElementById('navShopButton')
+                'navInfoButton': document.getElementById('navInfoButton'),
+                'navMinigameButton': document.getElementById('navMinigameButton'),
+                'navShopButton': document.getElementById('navShopButton')
             };
 
-            if (viewId === 'infoView') {
-                buttonMap[viewId].classList.add('bg-fuchsia-600', 'shadow-lg');
-                buttonMap[viewId].style.setProperty('background-image', 'linear-gradient(to right, #a855f7, #9333ea)', 'important');
-                infoView.classList.remove('hidden');
-            } else if (viewId === 'minigameView') {
-                buttonMap[viewId].classList.add('bg-fuchsia-600', 'shadow-lg');
-                buttonMap[viewId].style.setProperty('background-image', 'linear-gradient(to right, #a855f7, #9333ea)', 'important');
+            // Set active button styles
+            if (viewId === 'minigameView') {
+                buttonMap['navMinigameButton'].classList.add('!bg-fuchsia-600', 'hover:!bg-fuchsia-700', '!shadow-fuchsia-500/50');
+                buttonMap['navMinigameButton'].style.setProperty('background-image', 'linear-gradient(to right, #a855f7, #9333ea)', 'important');
                 minigameView.classList.remove('hidden');
             } else if (viewId === 'shopView') {
-                buttonMap[viewId].classList.add('!bg-yellow-500', 'hover:!bg-yellow-600', 'shadow-lg');
-                buttonMap[viewId].style.removeProperty('background-image');
+                buttonMap['navShopButton'].classList.add('!bg-yellow-500', 'hover:!bg-yellow-600', '!shadow-yellow-500/50');
+                buttonMap['navShopButton'].style.removeProperty('background-image');
                 shopView.classList.remove('hidden');
                 renderShop(); 
+            } else { // infoView
+                 buttonMap['navInfoButton'].classList.add('!bg-fuchsia-600', 'hover:!bg-fuchsia-700', '!shadow-fuchsia-500/50');
+                 buttonMap['navInfoButton'].style.setProperty('background-image', 'linear-gradient(to right, #a855f7, #9333ea)', 'important');
+                 infoView.classList.remove('hidden');
             }
         }
-
-        document.querySelectorAll('.nav-button').forEach(button => {
-            button.addEventListener('click', (event) => {
-                const id = event.target.id;
-                if (id === 'navInfoButton') showView('infoView');
-                else if (id === 'navMinigameButton') showView('minigameView');
-                else if (id === 'navShopButton') showView('shopView');
-            });
-        });
 
         document.querySelectorAll('.fact-button[data-fact]').forEach(button => {
             button.addEventListener('click', (event) => {
@@ -901,14 +1045,21 @@
             });
         });
         
-        if (eedsCharacter) {
-            eedsCharacter.addEventListener('click', triggerBongHit);
-        }
-
+        // Ensure event listener is attached when the element is loaded
         window.addEventListener('load', async () => {
             initSynths();
             await initFirebase();
             showView('infoView'); 
+            
+            // FIX 1: Add event listeners for navigation buttons
+            document.getElementById('navInfoButton').addEventListener('click', () => showView('infoView'));
+            document.getElementById('navMinigameButton').addEventListener('click', () => showView('minigameView'));
+            document.getElementById('navShopButton').addEventListener('click', () => showView('shopView'));
+
+            // Re-attach click listener for eedsCharacter 
+            if (eedsCharacter) {
+                eedsCharacter.addEventListener('click', triggerBongHit);
+            }
         });
     </script>
 </body>
