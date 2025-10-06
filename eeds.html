@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eedspeaks Smoke Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Dark background for a 'cosmic' feel */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background-color: #1e293b; /* Darker card */
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 800px;
+            width: 100%;
+            border: 1px solid #334155;
+        }
+        /* Style for the regular fact buttons (Emerald Green) */
+        .fact-button {
+            background-image: linear-gradient(to right, #10b981, #059669); /* Emerald Green */
+            color: white;
+            padding: 12px 24px;
+            border-radius: 9999px; /* Pill shape */
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 4px;
+        }
+        .fact-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.6);
+            background-image: linear-gradient(to right, #059669, #10b981);
+        }
+        /* Style for the CTA/Submit button (Purple) */
+        .cta-button {
+            background-image: linear-gradient(to right, #a855f7, #9333ea); /* Purple/Violet */
+            color: white;
+            padding: 16px 40px;
+            border-radius: 9999px;
+            font-size: 1.25rem; /* Large text */
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5);
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(168, 85, 247, 0.7);
+        }
+        .fact-box, .result-box {
+            background-color: #334155; /* Slate color for contrast */
+            color: #f8fafc; /* Light text */
+            padding: 20px;
+            border-radius: 12px;
+            min-height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.125rem;
+            font-style: italic;
+            transition: all 0.3s ease-in-out;
+            border-left: 5px solid #a855f7; /* Purple accent */
+            text-align: center;
+        }
+        .fact-box p, .result-box p {
+            max-width: 90%;
+            margin: 0;
+        }
+        .question-card {
+            background-color: #334155;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-white mb-4 tracking-wider text-center">
+            EEDSPEAKS <span class="text-emerald-400">Smoke Test</span>
+        </h1>
+        <p class="text-slate-400 mb-8 text-lg text-center">
+            Take this quick test to find out just how many grams Eeds can smoke in a single week!
+        </p>
+
+        <!-- INFORMATION VIEW (Default) -->
+        <div id="infoView">
+            <div class="flex justify-center mb-8">
+                <button id="beginTestButton" class="cta-button">Begin Test</button>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-4 mb-10">
+                <button class="fact-button" data-fact="mission">How does it work?</button>
+                <button class="fact-button" data-fact="founding">Is it fake?</button>
+                <button class="fact-button" data-fact="product">Bong or Joint</button>
+                <button class="fact-button" data-fact="mascot">Contact us</button>
+            </div>
+
+            <div id="factDisplay" class="fact-box">
+                <p class="text-slate-300">Select a category above to learn more.</p>
+            </div>
+        </div>
+
+        <!-- TEST VIEW (Hidden by default) -->
+        <div id="testView" class="hidden">
+            <form id="eedspeaksTestForm" class="space-y-6">
+                
+                <div class="question-card">
+                    <label class="block text-white text-xl font-semibold mb-3">1. How many grams do you think is possible to be smoked by Eedspeaks in one week?</label>
+                    <div class="space-y-2 text-slate-300">
+                        <label class="block"><input type="radio" name="q1" value="a" class="mr-2"> 5 grams</label>
+                        <label class="block"><input type="radio" name="q1" value="b" class="mr-2"> 10 grams</label>
+                        <label class="block"><input type="radio" name="q1" value="c" class="mr-2"> 20 grams</label>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <label class="block text-white text-xl font-semibold mb-3">2. How much does Eeds roll into a typical 'L' joint?</label>
+                    <div class="space-y-2 text-slate-300">
+                        <label class="block"><input type="radio" name="q2" value="a" class="mr-2"> 0.5 grams (Small)</label>
+                        <label class="block"><input type="radio" name="q2" value="b" class="mr-2"> 1.5 grams (Standard)</label>
+                        <label class="block"><input type="radio" name="q2" value="c" class="mr-2"> 3.0 grams (Cosmic)</label>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <label class="block text-white text-xl font-semibold mb-3">3. How much weed can Eedspeaks fit in one bowl?</label>
+                    <div class="space-y-2 text-slate-300">
+                        <label class="block"><input type="radio" name="q3" value="a" class="mr-2"> 0.2 grams (Pathetic)</label>
+                        <label class="block"><input type="radio" name="q3" value="b" class="mr-2"> 0.35 grams (Better)</label>
+                        <label class="block"><input type="radio" name="q3" value="c" class="mr-2"> 0.5 to 1.0 grams (Think hard)</label>
+                    </div>
+                </div>
+
+                <!-- NEW QUESTION 4 ADDED HERE -->
+                <div class="question-card">
+                    <label class="block text-white text-xl font-semibold mb-3">4. How often does Eedspeaks clean his bong and collect the black resin? (Tricky)</label>
+                    <div class="space-y-2 text-slate-300">
+                        <label class="block"><input type="radio" name="q4" value="a" class="mr-2"> 1 time per day</label>
+                        <label class="block"><input type="radio" name="q4" value="b" class="mr-2"> 1 time per week</label>
+                        <label class="block"><input type="radio" name="q4" value="c" class="mr-2"> 1 time per month</label>
+                        <label class="block"><input type="radio" name="q4" value="d" class="mr-2"> 1 time per year</label>
+                    </div>
+                </div>
+                
+                <div class="flex justify-center">
+                    <button type="submit" id="submitTestButton" class="cta-button">Reveal the Truth</button>
+                </div>
+            </form>
+
+            <div id="resultDisplay" class="result-box hidden mt-6">
+                <!-- Result will be displayed here -->
+            </div>
+            
+            <div class="flex justify-center mt-6">
+                <button id="restartButton" class="fact-button hidden">Restart Test</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Define the facts in a JavaScript object
+        const facts = {
+            // Updated text for "How does it work?"
+            mission: "Simply click on the Begin Test button, and take a test to find out the true amount of Cannabis Eedspeaks smoked in a week.",
+            // Updated text for "Is it fake?"
+            founding: "Everything shown on the website is correct information obtained after years of regular investigation.",
+            // UPDATED: New Bong or Joint fact with 'Fun Fact' embedded
+            product: "Eedspeaks usually only smokes from a Bong, but he isn't against a well-rolled L joint. <br><br><strong>Fun Fact:</strong> Eeds can smoke an L joint in 5 minutes.",
+            // UPDATED: Changed from 'Official Mascot' to 'Contact us'
+            mascot: "For all inquiries, contact Eeds directly via his galactic communicator at **eedspeaks@cosmiccloud.net** or send a transmission through the nebula."
+        };
+
+        const factDisplay = document.getElementById('factDisplay');
+        const buttons = document.querySelectorAll('.fact-button');
+        const beginTestButton = document.getElementById('beginTestButton');
+        
+        const infoView = document.getElementById('infoView');
+        const testView = document.getElementById('testView');
+        const testForm = document.getElementById('eedspeaksTestForm');
+        const resultDisplay = document.getElementById('resultDisplay');
+        const restartButton = document.getElementById('restartButton');
+
+        // --- View Management ---
+
+        function showView(viewId) {
+            infoView.classList.add('hidden');
+            testView.classList.add('hidden');
+            
+            if (viewId === 'infoView') {
+                infoView.classList.remove('hidden');
+                // Ensure form and result are reset when returning to info view
+                testForm.reset();
+                testForm.classList.remove('hidden');
+                resultDisplay.classList.add('hidden');
+                restartButton.classList.add('hidden');
+            } else if (viewId === 'testView') {
+                testView.classList.remove('hidden');
+                testForm.classList.remove('hidden');
+                resultDisplay.classList.add('hidden');
+                restartButton.classList.add('hidden');
+            }
+        }
+
+        // --- Fact Display Logic ---
+
+        function displayFact(factKey) {
+            const factText = facts[factKey];
+            factDisplay.innerHTML = `<p>${factText}</p>`;
+            
+            // Apply a slight animation for feedback
+            factDisplay.classList.remove('animate-pulse');
+            void factDisplay.offsetWidth; // Trigger reflow
+            factDisplay.classList.add('animate-pulse');
+            setTimeout(() => {
+                factDisplay.classList.remove('animate-pulse');
+            }, 500); // Remove animation after half a second
+        }
+
+        // Add event listeners to all fact buttons
+        buttons.forEach(button => {
+            button.addEventListener('click', (event) => {
+                const factKey = event.target.getAttribute('data-fact');
+                displayFact(factKey);
+                
+                // Highlight the active button in purple
+                buttons.forEach(btn => btn.classList.remove('bg-purple-600', 'shadow-lg'));
+                event.target.classList.add('bg-purple-600', 'shadow-lg');
+            });
+        });
+
+        // Add event listener for the "Begin Test" CTA button
+        if (beginTestButton) {
+            beginTestButton.addEventListener('click', () => {
+                showView('testView');
+            });
+        }
+        
+        // Add event listener for the "Restart" button
+        if (restartButton) {
+            restartButton.addEventListener('click', () => {
+                showView('infoView');
+                // Reset active button highlight
+                buttons.forEach(btn => btn.classList.remove('bg-purple-600', 'shadow-lg'));
+                // Clear fact display
+                factDisplay.innerHTML = `<p class="text-slate-300">Select a category above to learn more.</p>`;
+            });
+        }
+
+        // --- Form Submission Logic ---
+        
+        testForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            
+            // Simulate scoring (A=1 point, B=2 points, C=3 points, D=4 points)
+            let score = 0;
+            const formData = new FormData(testForm);
+            
+            for (const [name, value] of formData.entries()) {
+                if (value === 'a') score += 1;
+                else if (value === 'b') score += 2;
+                else if (value === 'c') score += 3;
+                else if (value === 'd') score += 4; // Added logic for option D
+            }
+            
+            // Recalculated outcome ranges (Min Score 4, Max Score 13)
+            let resultGrams = 0;
+            if (score <= 7) { 
+                resultGrams = "20.1";
+            } else if (score <= 10) { 
+                resultGrams = "21.3";
+            } else { // Score 11 through 13
+                resultGrams = "25.7";
+            }
+
+            // Display the results
+            const resultText = `
+                <p class="text-2xl font-bold text-emerald-400 mb-3">TEST COMPLETE!</p>
+                <p>Based on our highly scientific smoke-test calculations and your deep knowledge of Eeds' habits, the true amount smoked in a single week is determined to be:</p>
+                <p class="text-5xl font-extrabold text-white mt-4">${resultGrams} GRAMS</p>
+            `;
+            
+            resultDisplay.innerHTML = resultText;
+            resultDisplay.classList.remove('hidden');
+            testForm.classList.add('hidden');
+            
+            // Show the restart button
+            restartButton.classList.remove('hidden');
+        });
+
+        // Initialize view
+        showView('infoView');
+    </script>
+</body>
+</html>
