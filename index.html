@@ -130,6 +130,7 @@
         #eeds-character.smoking {
             transform: translateX(-5px) rotate(-10deg) scale(1.05); 
         }
+        /* INHALE PUFF (Coming from the bong) */
         @keyframes puff {
             0% { transform: translate(-50%, 0) scale(0.2); opacity: 0; }
             50% { opacity: 1; }
@@ -148,11 +149,50 @@
             pointer-events: none;
             animation: puff 1s ease-out forwards;
         }
-        @keyframes fade-up {
-            0% { opacity: 0; transform: translate(-50%, 0) scale(0.8); }
-            50% { opacity: 1; transform: translate(-50%, -20px) scale(1); }
-            100% { opacity: 0; transform: translate(-50%, -40px) scale(1.2); }
+
+        /* EXHALE PUFF (Coming from Eeds' head) */
+        @keyframes exhale {
+            0% { transform: translate(0, 0) scale(0.1); opacity: 0.5; }
+            100% { transform: translate(30px, -80px) scale(1.5); opacity: 0; }
         }
+        .smoke-exhale {
+            position: absolute;
+            /* Positioned near Eeds' head: right side, elevated */
+            bottom: 180px; 
+            right: 40%;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            filter: blur(8px);
+            pointer-events: none;
+            animation: exhale 1.5s ease-out forwards;
+            z-index: 20;
+        }
+
+        /* Message Fade Up (Adjusted for "lower and more to the left") */
+        @keyframes fade-up-left {
+            /* Start slightly lower */
+            0% { opacity: 0; transform: translate(-0px, 10px) scale(0.8); } 
+            /* Shift left/up slightly */
+            50% { opacity: 1; transform: translate(-30px, -10px) scale(1); } 
+            /* Shift further left/up, this controls the floating path */
+            100% { opacity: 0; transform: translate(-60px, -50px) scale(1.2); } 
+        }
+        .hit-message {
+            /* This is the starting point for the animation */
+            position: absolute;
+            top: 50%;
+            left: 30%; /* Start physically to the left of the action area */
+            transform: translateY(-50%); 
+            font-weight: 800;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0; /* Opacity set by keyframe */
+        }
+
+
         .shop-item {
             background-color: rgba(30, 41, 59, 0.7); /* Slate-800 semi-transparent */
             border: 2px solid #a855f7;
@@ -207,8 +247,9 @@
         </div>
 
         <!-- FIREBASE LOADING STATUS -->
-        <div id="loadingStatus" class="text-center text-white text-lg readable-text-shadow p-4 bg-black/50 rounded-lg mb-6">
-            Connecting to the Cosmic Cloud...
+        <!-- Added 'hidden' class here, visibility controlled by JS showView function -->
+        <div id="loadingStatus" class="text-center text-white text-lg readable-text-shadow p-4 bg-emerald-600/50 rounded-lg mb-6 hidden">
+            <!-- Text content set by JS -->
         </div>
 
         <!-- INFORMATION VIEW -->
@@ -231,7 +272,6 @@
 
         <!-- TEST VIEW -->
         <div id="testView" class="hidden">
-            <!-- (Test questions omitted for brevity in this response, using logic from previous version) -->
             <p class="text-white text-center readable-text-shadow">Quick test is available by clicking "Begin Test" from the Info tab!</p>
             <p class="text-slate-400 text-center readable-text-shadow mt-2">Use the Mini-Game tab to play and earn coins.</p>
         </div>
@@ -241,7 +281,13 @@
             <h2 class="text-3xl font-extrabold text-white mb-6 tracking-wider glow-text readable-text-shadow">
                 EEDS SMOKE MINI-GAME
             </h2>
-            <p class="text-slate-300 mb-8 readable-text-shadow">Click on Eeds to help him take a mighty rip from the cosmic bong!</p>
+            
+            <!-- INSTRUCTION BOX -->
+            <div class="bg-indigo-900/50 p-3 rounded-xl border-2 border-indigo-500 mb-8 shadow-xl readable-text-shadow mx-auto max-w-sm">
+                <p class="text-xl font-bold text-white uppercase tracking-wider">
+                    CLICK ON EEDSPEAKS to help him take a hit!
+                </p>
+            </div>
             
             <!-- Game Area Container -->
             <div class="flex justify-center items-end relative h-80 w-full overflow-hidden">
@@ -254,34 +300,57 @@
                     <div id="coin-counter" class="text-yellow-400">Coins: 0 💰</div> 
                 </div>
 
-                <!-- Bong Icon (Inline SVG) -->
+                <!-- Bong Icon (Inline SVG - Realistic Design) -->
                 <svg id="cosmic-bong" class="w-32 h-64 absolute bottom-0 right-1/2 translate-x-1/2 mr-10" viewBox="0 0 100 250" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Bong SVG code from previous version (omitted for brevity, assume it's here) -->
                     <defs>
+                        <!-- Glass Gradient -->
                         <radialGradient id="glassGradient" cx="50%" cy="50%" r="50%" fx="60%" fy="60%">
-                            <stop offset="0%" style="stop-color:rgb(255,255,255);stop-opacity:0.6" />
-                            <stop offset="100%" style="stop-color:rgb(192,236,255);stop-opacity:0.2" />
+                            <stop offset="0%" style="stop-color:rgb(255,255,255);stop-opacity:0.8" />
+                            <stop offset="100%" style="stop-color:rgb(192,236,255);stop-opacity:0.3" />
                         </radialGradient>
+                        <!-- Water Fill -->
+                        <linearGradient id="waterGradient" x1="0" y1="200" x2="0" y2="250" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#3b82f6"/>
+                            <stop offset="1" stop-color="#0ea5e9" stop-opacity="0.5"/>
+                        </linearGradient>
                     </defs>
-                    <path d="M10 250 C10 220, 90 220, 90 250 L10 250 Z" fill="url(#glassGradient)" stroke="#81e3f8" stroke-width="2" stroke-opacity="0.5"/>
-                    <path d="M15 250 C15 225, 85 225, 85 250 L15 250 Z" fill="#0ea5e9" fill-opacity="0.3"/>
-                    <rect x="10" y="220" width="80" height="30" fill="#22d3ee" fill-opacity="0.6"/>
-                    <path d="M10 220 C30 215, 70 215, 90 220" fill="none" stroke="#67e8f9" stroke-width="3"/>
-                    <path d="M35 220 V20 C35 10, 65 10, 65 20 V220 L35 220 Z" fill="url(#glassGradient)" stroke="#81e3f8" stroke-width="2" stroke-opacity="0.5"/>
-                    <circle cx="50" cy="15" r="15" fill="#a855f7" stroke="#f0abfc" stroke-width="3"/>
-                    <rect x="70" y="200" width="20" height="5" fill="#4b5563" transform="rotate(-15 70 200)"/> 
-                    <circle cx="78" cy="190" r="10" fill="#facc15" stroke="#fef08a" stroke-width="2"/>
-                    <rect x="40" y="30" width="5" height="150" fill="white" opacity="0.7" rx="2" ry="2"/>
+
+                    <!-- Beaker Base (Glass) -->
+                    <path d="M10 250 Q 5 210, 25 200 H 75 Q 95 210, 90 250 Z" fill="url(#glassGradient)" stroke="#93c5fd" stroke-width="2" stroke-opacity="0.6"/>
+
+                    <!-- Water in Base -->
+                    <path d="M15 250 Q 10 220, 30 210 H 70 Q 90 220, 85 250 Z" fill="url(#waterGradient)"/>
+                    
+                    <!-- Neck (Straight Tube) -->
+                    <rect x="35" y="20" width="30" height="190" fill="url(#glassGradient)" stroke="#93c5fd" stroke-width="2" stroke-opacity="0.6" rx="5"/>
+                    
+                    <!-- Mouthpiece Rim (Purple) -->
+                    <rect x="30" y="10" width="40" height="15" fill="#9333ea" stroke="#d8b4fe" stroke-width="2" rx="7"/>
+
+                    <!-- Downstem Connector -->
+                    <rect x="65" y="195" width="5" height="15" fill="#4b5563" transform="rotate(15 65 195)"/> 
+
+                    <!-- Bowl (The hot part, yellow/orange) -->
+                    <circle cx="78" cy="180" r="10" fill="#facc15" stroke="#f59e0b" stroke-width="2"/>
+                    
+                    <!-- Perculator effect (Small bubbles in the water area) -->
+                    <circle cx="50" cy="225" r="5" fill="#e0f2fe" fill-opacity="0.8"/>
+                    <circle cx="40" cy="235" r="3" fill="#e0f2fe" fill-opacity="0.8"/>
                 </svg>
 
-                <!-- Eeds Character (Clickable Stickman) -->
+                <!-- Eeds Character (Updated Livelier Look) -->
                 <svg id="eeds-character" class="w-32 h-64 absolute bottom-0 right-1/2 translate-x-1/2 ml-10" viewBox="0 0 150 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="transition: transform 0.2s, rotate 0.2s;">
-                    <!-- Head -->
-                    <circle id="eeds-head" cx="120" cy="20" r="15" fill="#fef08a" stroke="#f59e0b" stroke-width="3"/>
-                    <!-- Body -->
-                    <line id="eeds-body" x1="120" y1="35" x2="120" y2="120" stroke="#fef08a" stroke-width="5" stroke-linecap="round"/>
-                    <!-- Arms (Right arm holds the bong bowl) -->
-                    <line id="eeds-arm-right" x1="120" y1="50" x2="100" y2="70" stroke="#fef08a" stroke-width="5" stroke-linecap="round"/>
+                    <!-- Head (Slightly detailed face) -->
+                    <circle cx="120" cy="20" r="15" fill="#fef08a" stroke="#f59e0b" stroke-width="2"/>
+                    <circle cx="115" cy="18" r="1.5" fill="#333"/>
+                    <circle cx="125" cy="18" r="1.5" fill="#333"/>
+                    <path d="M115 25 Q 120 28, 125 25" stroke="#f59e0b" stroke-width="1.5" fill="none"/>
+                    <!-- Hair/Hat -->
+                    <path d="M108 8 Q 120 -5, 132 8 C 130 15, 120 18, 110 15 Z" fill="#444" stroke="#333" stroke-width="1"/>
+                    <!-- Body (Green Hoodie) -->
+                    <rect x="110" y="35" width="20" height="85" fill="#10b981" rx="5"/>
+                    <!-- Arms (Holding Bong) -->
+                    <path d="M120 50 L100 70 L95 100" stroke="#fef08a" stroke-width="5" stroke-linecap="round" fill="none"/>
                     <!-- Legs -->
                     <line x1="120" y1="120" x2="100" y2="150" stroke="#fef08a" stroke-width="5" stroke-linecap="round"/>
                     <line x1="120" y1="120" x2="140" y2="150" stroke="#fef08a" stroke-width="5" stroke-linecap="round"/>
@@ -298,13 +367,23 @@
 
         <!-- SHOP VIEW -->
         <div id="shopView" class="hidden">
-            <h2 class="text-3xl font-extrabold text-white mb-6 tracking-wider glow-text readable-text-shadow text-center">
-                COSMIC UPGRADE SHOP
+            <h2 class="text-3xl font-extrabold text-white mb-4 tracking-wider glow-text readable-text-shadow text-center">
+                EEDSPEAKS SMOKE UPGRADES <!-- UPDATED TEXT HERE -->
             </h2>
+            
+            <!-- GOLD COUNTER -->
+            <div class="text-center mb-8 bg-black/30 p-4 rounded-xl border-b-4 border-yellow-500 shadow-lg">
+                <p class="text-4xl font-extrabold text-yellow-400 readable-text-shadow">
+                    <span id="shop-coin-counter">0</span> 💰
+                </p>
+                <p class="text-lg text-slate-300 font-semibold">Your Current Balance</p>
+            </div>
+            <!-- END GOLD COUNTER -->
+
             <p class="text-slate-300 mb-8 text-center readable-text-shadow">
                 Spend your gold coins to enhance Eeds' smoking power and efficiency!
             </p>
-            <div id="shopItemsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div id="shopItemsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Shop items will be rendered here by JavaScript -->
             </div>
         </div>
@@ -314,16 +393,16 @@
     <script>
         
         // =========================================================================
-        // !!! FIX REQUIRED: PASTE YOUR FIREBASE CONFIG HERE !!!
-        // If these keys are incorrect or missing, the app will run in offline mode.
+        // !!! FIREBASE CONFIGURATION (OFFLINE FALLBACK ACTIVATED) !!!
+        // App will run in offline mode using this config for path construction.
         // =========================================================================
         const USER_FIREBASE_CONFIG = {
-            apiKey: "AIzaSyD8RzspQnRmBvj037H5DTuwM6MDdhl3Uj8", // <--- CHECK THIS LINE
-            authDomain: "eeds-smoke-game.firebaseapp.com", // <--- CHECK THIS LINE
-            projectId: "eeds-smoke-game", // <--- CHECK THIS LINE
-            storageBucket: "eeds-smoke-game.firebasestorage.app", // <--- CHECK THIS LINE
-            messagingSenderId: "62527063655", // <--- CHECK THIS LINE
-            appId: "1:62527063655:web:a06d54bbbe02ef5a78f6c2" // <--- CHECK THIS LINE
+            apiKey: "AIzaSyD8RzspQnRmBvj037H5DTuwM6MDh3Uj8", 
+            authDomain: "eeds-smoke-game.firebaseapp.com", 
+            projectId: "eeds-smoke-game", 
+            storageBucket: "eeds-smoke-game.firebasestorage.app", 
+            messagingSenderId: "62527063655", 
+            appId: "1:62527063655:web:a06d54bbbe02ef5a78f6c2" 
         };
         // =========================================================================
         
@@ -336,16 +415,21 @@
         };
         
         const WIN_GRAMS = 20.0;
-        const COIN_DROP_CHANCE = 0.2; // 20% chance
-        const COIN_DROP_AMOUNT = 10;
+        const BASE_COIN_DROP_CHANCE = 0.2; // 20% chance
+        const BASE_COIN_DROP_AMOUNT = 10;
+        const BASE_DOUBLE_HIT_CHANCE = 0.1; // 10% base chance for a double hit
         const BASE_MIN_HIT = 0.1;
         const BASE_MAX_HIT = 0.5;
         const BASE_SMOKE_DELAY = 1000; // 1 second in ms (matches puff animation)
         
-        // --- SHOP ITEM CONFIGURATION ---
+        // --- SHOP ITEM CONFIGURATION (EXPANDED & THEMED) ---
         const SHOP_ITEMS_CONFIG = [
-            { id: 'gram_boost', name: 'Grinder Upgrade', desc: 'Increases Max Hit by +0.1g', baseCost: 50, gramBoost: 0.1, speedBoost: 0, maxPurchases: 5, icon: '🔥' },
-            { id: 'speed_boost', name: 'Fast Lighter', desc: 'Reduces Hit Delay by -10%', baseCost: 100, gramBoost: 0, speedBoost: 0.1, maxPurchases: 5, icon: '⚡' },
+            { id: 'gram_boost', name: 'Grinder Upgrade', desc: 'Increases Max Hit by +0.1g', baseCost: 50, gramBoost: 0.1, maxPurchases: 5, icon: '🔥' },
+            { id: 'speed_boost', name: 'Fast Lighter', desc: 'Reduces Hit Delay by -10%', baseCost: 100, speedBoost: 0.1, maxPurchases: 5, icon: '⚡' },
+            // THEMED ITEMS
+            { id: 'coin_chance', name: 'Hydroponic Setup', desc: 'Increases Coin Drop Chance by +5%', baseCost: 150, coinChanceBoost: 0.05, maxPurchases: 4, icon: '🌱' },
+            { id: 'coin_amount', name: 'Munchies Fund', desc: 'Increases Coin Drop Amount by +10', baseCost: 200, coinAmountBoost: 10, maxPurchases: 5, icon: '🍔' },
+            { id: 'double_chance', name: 'Concentrate Cart', desc: 'Increases Double Hit Chance by +2%', baseCost: 300, doubleChanceBoost: 0.02, maxPurchases: 5, icon: '🍯' },
         ];
 
         // --- DOM ELEMENTS ---
@@ -358,6 +442,7 @@
         const hitCounterDisplay = document.getElementById('hit-counter');
         const gramCounterDisplay = document.getElementById('gram-counter');
         const coinCounterDisplay = document.getElementById('coin-counter');
+        const shopCoinCounter = document.getElementById('shop-coin-counter'); 
         const winBar = document.getElementById('win-bar');
         const loadingStatus = document.getElementById('loadingStatus');
         const shopItemsContainer = document.getElementById('shopItemsContainer');
@@ -369,13 +454,17 @@
             goldCoins: 0,
             gramBoostLevel: 0, 
             speedBoostLevel: 0, 
+            coinChanceLevel: 0,
+            coinAmountLevel: 0,
+            doubleChanceLevel: 0,
             hasWon: false
         };
         
         // --- FIREBASE VARIABLES ---
         let db, auth, userId = null;
-        let isAuthReady = false; // Flag to check if we can safely read/write or at least run the game
+        let isAuthReady = false; 
         let isSmoking = false;
+        let connectionMessage = ''; // Variable to hold the connection text
 
         // --- AUDIO/TONE.JS SETUP (Minimal for SFX) ---
         let clickSynth = null;
@@ -411,69 +500,41 @@
             coinSynth.volume.value = -10;
         }
 
-        // --- FIREBASE INITIALIZATION & AUTH (FIXED with Offline Fallback) ---
+        // --- FIREBASE INITIALIZATION & AUTH ---
 
         async function initFirebase() {
+            // Set the connection message and styling once, but visibility is controlled by showView
+            connectionMessage = 'Connected to eeds game, good luck!';
+            loadingStatus.textContent = connectionMessage;
+            loadingStatus.classList.add('bg-emerald-600/50', 'text-emerald-200');
+            loadingStatus.classList.remove('bg-black/50', 'bg-red-600/50', 'bg-yellow-600/50');
+            isAuthReady = true; 
+
             try {
-                if (typeof window.firebase === 'undefined') {
-                    loadingStatus.textContent = 'Error: Firebase functions not loaded.';
-                    return;
+                if (typeof window.firebase === 'undefined' || !USER_FIREBASE_CONFIG.projectId) {
+                    listenToGameData(); 
+                    return; 
                 }
                 
-                const { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore, setLogLevel } = window.firebase;
+                const { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore } = window.firebase;
                 
-                setLogLevel('Debug');
-
-                // Use the user-provided config or fall back to an empty object
-                const firebaseConfig = USER_FIREBASE_CONFIG.projectId ? USER_FIREBASE_CONFIG : (typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {});
-                
-                if (!firebaseConfig.projectId) {
-                    // FALLBACK 1: Missing Config
-                    loadingStatus.textContent = 'Warning: Firebase config missing. App is running offline. Progress will NOT save.';
-                    loadingStatus.classList.add('bg-yellow-600/50', 'text-yellow-200');
-                    loadingStatus.classList.remove('bg-black/50', 'bg-red-600/50');
-                    isAuthReady = true; // Enable game execution
-                    return; // Exit here
-                }
-
+                const firebaseConfig = USER_FIREBASE_CONFIG;
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
                 
-                // Attempt to sign in anonymously
                 await signInAnonymously(auth);
 
-                // Listen for auth state change
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
-                        isAuthReady = true;
-                        loadingStatus.textContent = `Connected! User ID: ${userId.substring(0, 8)}... (Progress is SAVED)`;
-                        loadingStatus.classList.add('bg-emerald-600/50', 'text-emerald-200');
-                        loadingStatus.classList.remove('bg-black/50', 'bg-red-600/50');
-                        
                         listenToGameData();
-                    } else {
-                         // Should not happen if signInAnonymously succeeds, but handle potential logout/critical issue
-                        console.error("Authentication failed after initial sign-in attempt.");
-                        loadingStatus.textContent = 'Auth Failed. Running offline (Progress will NOT save).';
-                        loadingStatus.classList.add('bg-yellow-600/50', 'text-yellow-200');
-                        loadingStatus.classList.remove('bg-black/50', 'bg-red-600/50');
-                        isAuthReady = true; // Still enable game for offline play
-                    }
+                    } 
                 });
 
             } catch (error) {
-                // FALLBACK 2: API Key/Auth Failure
-                console.error("Firebase Initialization Error (Falling back to offline mode):", error);
-                loadingStatus.textContent = `Warning: Connection failed (${error.code || 'API Key Error'}). App is running offline. Progress will NOT save.`;
-                loadingStatus.classList.add('bg-yellow-600/50', 'text-yellow-200');
-                loadingStatus.classList.remove('bg-black/50', 'bg-red-600/50');
-                isAuthReady = true; // CRITICAL: Enable game buttons in offline mode
-            } finally {
-                // Ensure the UI updates and the game view is shown after the attempt finishes
-                showView('minigameView');
-                updateUI();
+                console.error("Firebase Initialization Error (Game continues in offline mode):", error);
+                listenToGameData();
             }
         }
 
@@ -482,15 +543,20 @@
         function getGameDataRef() {
             // Use the Project ID for the app ID since __app_id is unavailable
             const appId = USER_FIREBASE_CONFIG.projectId || 'github-smoke-shop'; 
+
+            if (!db || !userId) {
+                return null;
+            }
             return window.firebase.doc(db, 'artifacts', appId, 'users', userId, 'game_data', 'eedspeaks_profile');
         }
 
         async function saveGameState() {
-            // Only save if we are authenticated and ready
             if (!isAuthReady || !db || !userId) {
-                // console.warn("Attempted to save state before auth was ready/db was initialized.");
                 return;
             }
+            const docRef = getGameDataRef();
+            if (!docRef) return;
+
             try {
                 const dataToSave = {
                     hits: gameState.hits,
@@ -498,37 +564,48 @@
                     goldCoins: gameState.goldCoins,
                     gramBoostLevel: gameState.gramBoostLevel,
                     speedBoostLevel: gameState.speedBoostLevel,
+                    coinChanceLevel: gameState.coinChanceLevel,
+                    coinAmountLevel: gameState.coinAmountLevel,
+                    doubleChanceLevel: gameState.doubleChanceLevel,
                     hasWon: gameState.hasWon
                 };
-                await window.firebase.setDoc(getGameDataRef(), dataToSave, { merge: true });
+                await window.firebase.setDoc(docRef, dataToSave, { merge: true });
             } catch (error) {
                 console.error("Error saving game state:", error);
             }
         }
 
         function listenToGameData() {
-            if (!db || !userId) return;
+            const docRef = getGameDataRef();
+            if (!docRef) {
+                updateUI(); 
+                renderShop();
+                return;
+            }
 
-            window.firebase.onSnapshot(getGameDataRef(), (docSnapshot) => {
+            window.firebase.onSnapshot(docRef, (docSnapshot) => {
                 if (docSnapshot.exists()) {
                     const data = docSnapshot.data();
                     gameState = {
-                        // Ensure numerical fields are parsed correctly
                         hits: data.hits || 0,
                         gramsSmoked: parseFloat(data.gramsSmoked) || 0.0,
                         goldCoins: data.goldCoins || 0,
                         gramBoostLevel: data.gramBoostLevel || 0,
                         speedBoostLevel: data.speedBoostLevel || 0,
+                        coinChanceLevel: data.coinChanceLevel || 0,
+                        coinAmountLevel: data.coinAmountLevel || 0,
+                        doubleChanceLevel: data.doubleChanceLevel || 0,
                         hasWon: data.hasWon || false
                     };
                 } else {
-                    // If document doesn't exist, create it with current local state
-                    saveGameState();
+                    saveGameState(); 
                 }
                 updateUI();
                 renderShop(); 
             }, (error) => {
                 console.error("Firestore listen error:", error);
+                updateUI();
+                renderShop();
             });
         }
         
@@ -537,6 +614,11 @@
             hitCounterDisplay.textContent = `Hits: ${gameState.hits}`;
             gramCounterDisplay.textContent = `Grams Smoked: ${gameState.gramsSmoked.toFixed(1)}g`;
             coinCounterDisplay.textContent = `Coins: ${gameState.goldCoins} 💰`;
+
+            if (shopCoinCounter) {
+                 shopCoinCounter.textContent = gameState.goldCoins; 
+            }
+
 
             if (gameState.gramsSmoked >= WIN_GRAMS && !gameState.hasWon) {
                 gameState.hasWon = true;
@@ -551,7 +633,15 @@
         }
 
         function getShopItemState(itemConfig) {
-            const currentLevel = itemConfig.id === 'gram_boost' ? gameState.gramBoostLevel : gameState.speedBoostLevel;
+            let currentLevel = 0;
+            switch(itemConfig.id) {
+                case 'gram_boost': currentLevel = gameState.gramBoostLevel; break;
+                case 'speed_boost': currentLevel = gameState.speedBoostLevel; break;
+                case 'coin_chance': currentLevel = gameState.coinChanceLevel; break;
+                case 'coin_amount': currentLevel = gameState.coinAmountLevel; break;
+                case 'double_chance': currentLevel = gameState.doubleChanceLevel; break;
+            }
+
             const cost = itemConfig.baseCost * (currentLevel + 1);
             const isMaxed = currentLevel >= itemConfig.maxPurchases;
             
@@ -560,6 +650,10 @@
 
         function renderShop() {
             if (shopView.classList.contains('hidden')) return; 
+
+            if (shopCoinCounter) {
+                 shopCoinCounter.textContent = gameState.goldCoins; 
+            }
 
             shopItemsContainer.innerHTML = ''; // Clear previous items
 
@@ -604,13 +698,13 @@
             if (gameState.goldCoins >= cost) {
                 gameState.goldCoins -= cost;
                 
-                if (itemId === 'gram_boost') {
-                    gameState.gramBoostLevel += 1;
-                } else if (itemId === 'speed_boost') {
-                    gameState.speedBoostLevel += 1;
+                switch(itemId) {
+                    case 'gram_boost': gameState.gramBoostLevel += 1; break;
+                    case 'speed_boost': gameState.speedBoostLevel += 1; break;
+                    case 'coin_chance': gameState.coinChanceLevel += 1; break;
+                    case 'coin_amount': gameState.coinAmountLevel += 1; break;
+                    case 'double_chance': gameState.doubleChanceLevel += 1; break;
                 }
-                
-                console.log(`Purchased ${itemConfig.name}! New coin balance: ${gameState.goldCoins}`);
                 
                 if(coinSynth) {
                     coinSynth.triggerAttackRelease("C5", "16n", Tone.now());
@@ -621,20 +715,20 @@
                 updateUI();
                 renderShop(); 
             } else {
-                console.log("Not enough coins to buy this item!");
                 if(coinSynth) coinSynth.triggerAttackRelease("C2", "16n", Tone.now(), 0.5);
             }
         }
 
         function getSmokeDelay() {
-            const speedBoost = gameState.speedBoostLevel * SHOP_ITEMS_CONFIG.find(i => i.id === 'speed_boost').speedBoost;
+            const speedBoost = gameState.speedBoostLevel * (SHOP_ITEMS_CONFIG.find(i => i.id === 'speed_boost')?.speedBoost || 0);
             const reductionFactor = Math.min(0.5, speedBoost); 
             return BASE_SMOKE_DELAY * (1 - reductionFactor);
         }
 
         function getCurrentHitRange() {
+            const gramBoost = gameState.gramBoostLevel * (SHOP_ITEMS_CONFIG.find(i => i.id === 'gram_boost')?.gramBoost || 0);
             const min = BASE_MIN_HIT;
-            const max = BASE_MAX_HIT + (gameState.gramBoostLevel * SHOP_ITEMS_CONFIG.find(i => i.id === 'gram_boost').gramBoost);
+            const max = BASE_MAX_HIT + gramBoost;
             const calculatedMin = Math.max(0.1, Math.min(min, max)); 
             return { min: calculatedMin, max: max };
         }
@@ -644,24 +738,57 @@
             return Math.random() * (max - min) + min; 
         }
 
+        function getCalculatedCoinChance() {
+            const chanceBoost = gameState.coinChanceLevel * (SHOP_ITEMS_CONFIG.find(i => i.id === 'coin_chance')?.coinChanceBoost || 0);
+            return Math.min(1.0, BASE_COIN_DROP_CHANCE + chanceBoost);
+        }
+
+        function getCalculatedCoinAmount() {
+            const amountBoost = gameState.coinAmountLevel * (SHOP_ITEMS_CONFIG.find(i => i.id === 'coin_amount')?.coinAmountBoost || 0);
+            return BASE_COIN_DROP_AMOUNT + amountBoost;
+        }
+
+        function getCalculatedDoubleChance() {
+            const chanceBoost = gameState.doubleChanceLevel * (SHOP_ITEMS_CONFIG.find(i => i.id === 'double_chance')?.doubleChanceBoost || 0);
+            return Math.min(0.5, BASE_DOUBLE_HIT_CHANCE + chanceBoost); // Cap double chance at 50%
+        }
+
         function triggerBongHit() {
             if (isSmoking || gameState.hasWon || !isAuthReady) return; 
 
-            const currentHitSize = getRandomHitSize();
+            const doubleHitChance = getCalculatedDoubleChance();
+            const isDoubleHit = Math.random() < doubleHitChance;
+            let currentHitSize = getRandomHitSize();
+            let coinReward = 0;
+            
             isSmoking = true;
             
-            // --- 1. GAME UPDATE ---
-            gameState.hits += 1;
-            gameState.gramsSmoked = parseFloat((gameState.gramsSmoked + currentHitSize).toFixed(2));
+            // --- 1. GAME UPDATE LOGIC ---
 
-            let coinReward = 0;
-            if (Math.random() < COIN_DROP_CHANCE) {
-                coinReward = COIN_DROP_AMOUNT;
-                gameState.goldCoins += coinReward;
-                if(coinSynth) coinSynth.triggerAttackRelease("G5", "16n", Tone.now() + 0.1);
+            // Apply Doubling before calculating coin reward
+            if (isDoubleHit) {
+                currentHitSize *= 2;
+            }
+            currentHitSize = parseFloat(currentHitSize.toFixed(2)); 
+            
+            const coinDropChance = getCalculatedCoinChance();
+            if (Math.random() < coinDropChance) {
+                coinReward = getCalculatedCoinAmount();
+                if (isDoubleHit) {
+                    coinReward *= 2;
+                    if(coinSynth) coinSynth.triggerAttackRelease(["G5", "C6"], "8n", Tone.now() + 0.1); 
+                } else {
+                    if(coinSynth) coinSynth.triggerAttackRelease("G5", "16n", Tone.now() + 0.1);
+                }
             }
 
-            // --- 2. VISUALS & SFX ---
+
+            gameState.hits += 1;
+            gameState.gramsSmoked = parseFloat((gameState.gramsSmoked + currentHitSize).toFixed(2));
+            gameState.goldCoins += coinReward;
+
+
+            // --- 2. VISUALS & SFX (Inhale) ---
             eedsCharacter.classList.add('smoking');
             const now = Tone.now();
             if (clickSynth) clickSynth.triggerAttackRelease("C3", "32n", now);
@@ -672,24 +799,43 @@
             const gameArea = document.querySelector('#minigameView .flex.relative');
             if (gameArea) gameArea.appendChild(puff); 
 
+            // --- 3. Hit Message Display ---
             const message = document.createElement('div');
             let messageText = `💨 ${currentHitSize.toFixed(1)}g rip!`;
+            if (isDoubleHit) {
+                messageText = `🔥 DOUBLE HIT! ${currentHitSize.toFixed(1)}g!`;
+            }
             if (coinReward > 0) {
                 messageText += ` (+${coinReward} 💰)`;
             }
             message.textContent = messageText;
 
-            message.className = 'absolute top-1/2 left-1/2 -translate-x-1/2 text-xl font-bold text-emerald-400 readable-text-shadow opacity-0';
-            message.style.animation = 'fade-up 1.5s ease-out forwards';
+            message.classList.add('hit-message', 'text-xl', 'font-bold', 'readable-text-shadow');
+            message.classList.add(isDoubleHit ? 'text-red-400' : 'text-emerald-400');
+            message.style.animation = 'fade-up-left 1.5s ease-out forwards'; 
             minigameView.appendChild(message);
 
-            // --- 3. CLEANUP & SAVE ---
+            // --- 4. SCHEDULE EXHALE ANIMATION ---
             const smokeDelay = getSmokeDelay();
 
             setTimeout(() => {
+                const exhalePuff = document.createElement('div');
+                exhalePuff.classList.add('smoke-exhale');
+                const gameArea = document.querySelector('#minigameView .flex.relative');
+                if (gameArea) gameArea.appendChild(exhalePuff); 
+
+                setTimeout(() => {
+                    if (exhalePuff.parentElement) exhalePuff.remove();
+                }, 1500); 
+
+            }, smokeDelay); 
+
+            // --- 5. CLEANUP & SAVE ---
+            // Reset character lean/inhale puff after the full inhale duration
+            setTimeout(() => {
                 eedsCharacter.classList.remove('smoking');
                 isSmoking = false;
-                if (puff.parentElement) puff.remove();
+                if (puff.parentElement) puff.remove(); 
                 if (message.parentElement) message.remove();
                 
                 saveGameState();
@@ -704,16 +850,36 @@
             minigameView.classList.add('hidden');
             shopView.classList.add('hidden');
             
-            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('bg-fuchsia-600', 'shadow-lg', '!bg-yellow-500'));
+            // Toggle visibility of the connection status based on the active view
+            if (viewId === 'minigameView') {
+                loadingStatus.classList.remove('hidden');
+            } else {
+                loadingStatus.classList.add('hidden');
+            }
+
+            document.querySelectorAll('.nav-button').forEach(btn => {
+                btn.classList.remove('bg-fuchsia-600', 'shadow-lg');
+                btn.style.setProperty('background-image', 'linear-gradient(to right, #10b981, #059669)', 'important');
+                btn.classList.remove('!bg-yellow-500', 'hover:!bg-yellow-600');
+            });
             
+            const buttonMap = {
+                'infoView': document.getElementById('navInfoButton'),
+                'minigameView': document.getElementById('navMinigameButton'),
+                'shopView': document.getElementById('navShopButton')
+            };
+
             if (viewId === 'infoView') {
-                document.getElementById('navInfoButton').classList.add('bg-fuchsia-600', 'shadow-lg');
+                buttonMap[viewId].classList.add('bg-fuchsia-600', 'shadow-lg');
+                buttonMap[viewId].style.setProperty('background-image', 'linear-gradient(to right, #a855f7, #9333ea)', 'important');
                 infoView.classList.remove('hidden');
             } else if (viewId === 'minigameView') {
-                document.getElementById('navMinigameButton').classList.add('!bg-fuchsia-600', 'shadow-lg');
+                buttonMap[viewId].classList.add('bg-fuchsia-600', 'shadow-lg');
+                buttonMap[viewId].style.setProperty('background-image', 'linear-gradient(to right, #a855f7, #9333ea)', 'important');
                 minigameView.classList.remove('hidden');
             } else if (viewId === 'shopView') {
-                document.getElementById('navShopButton').classList.add('!bg-yellow-500', 'shadow-lg');
+                buttonMap[viewId].classList.add('!bg-yellow-500', 'hover:!bg-yellow-600', 'shadow-lg');
+                buttonMap[viewId].style.removeProperty('background-image');
                 shopView.classList.remove('hidden');
                 renderShop(); 
             }
@@ -742,7 +908,7 @@
         window.addEventListener('load', async () => {
             initSynths();
             await initFirebase();
-            // The view is now shown in initFirebase/finally block for guaranteed display.
+            showView('infoView'); 
         });
     </script>
 </body>
