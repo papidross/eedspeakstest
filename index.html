@@ -791,11 +791,7 @@
             envelope: { attack: 0.05, decay: 0.7, sustain: 0.1, release: 0.1 } // Slow attack, long decay for draw
         }).toDestination();
         
-        // Synth for the exhale/release sound (Square wave, quick envelope)
-        const exhaleSynth = new Tone.Synth({
-            oscillator: { type: 'square' }, 
-            envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.1 } // Short, percussive envelope
-        }).toDestination();
+        // The exhaleSynth declaration has been removed
 
         // Function to play the coin sound when gold is gained (less subtle sound requested)
         function playCoinSound() {
@@ -805,17 +801,16 @@
             }
         }
         
-        // Function to play the hit sound (Mimicking a subtle, realistic bong draw and exhale)
+        // Function to play the hit sound (Mimicking a subtle, realistic bong draw and inhale)
         function playHitSound() {
             if (initialized) {
                 const now = Tone.now();
                 
-                // 1. The Inhale (Draw): Long pink noise with low volume for subtlety
-                inhaleNoise.volume.value = -10; // **FIXED ERROR: Used .value instead of .setValue**
+                // 1. The Inhale (Draw): Long pink noise with low volume for subtlety (KEPT)
+                inhaleNoise.volume.value = -10;
                 inhaleNoise.triggerAttackRelease('0.8', now); 
 
-                // 2. The Exhale/Release: Low, punchy tone for the release
-                exhaleSynth.triggerAttackRelease('G2', '0.2', now + 0.6, 0.5); // Delayed for the release, volume 0.5
+                // 2. The Exhale/Release: Removed the low, punchy tone.
             }
         }
         
