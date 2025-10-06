@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eedspeaks Smoke Shop</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tone.js for generating audio -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <!-- Firebase Imports for Persistence -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -35,7 +33,7 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #0f172a; 
-            min-height: 100vh;
+            min-height: 10vh;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -123,13 +121,51 @@
             border-left: 5px solid #10b981; 
             text-align: center;
         }
+        
+        /* CHARACTER ANIMATIONS (UPDATED) */
+        @keyframes sway {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(0, -5px) rotate(3deg); } 
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
         #eeds-character {
             cursor: pointer;
             user-select: none; /* Prevent text selection */
             transition: transform 0.1s, rotate 0.3s ease-out;
         }
+        #eeds-character.swaying {
+            animation: sway 2.5s infinite ease-in-out;
+        }
         #eeds-character.smoking {
-            transform: translateX(-5px) rotate(-10deg) scale(1.05); 
+            /* Lean forward/right slightly to hit the bong */
+            transform: translateX(20px) translateY(10px) scale(1.05); 
+            animation: none; 
+        }
+        
+        /* NEW: Refill animation for character */
+        #eeds-character.refilling {
+            /* Lean more intensely for the refill/scooping motion */
+            transform: translateX(30px) translateY(15px) rotate(10deg) scale(1.05); 
+            animation: none; 
+        }
+
+        @keyframes refill {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.5; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        #refill-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            animation: refill 0.5s infinite alternate;
+            z-index: 50;
+            pointer-events: none;
         }
         
         @keyframes puff {
@@ -139,7 +175,7 @@
         }
         .smoke-puff {
             position: absolute;
-            bottom: 290px; 
+            bottom: 232px; 
             left: 50%;
             transform: translate(-50%, 0);
             width: 30px;
@@ -157,7 +193,7 @@
         }
         .smoke-exhale {
             position: absolute;
-            bottom: 220px; 
+            bottom: 232px; 
             right: 40%;
             width: 40px;
             height: 40px;
@@ -261,6 +297,31 @@
             opacity: 1;
             transform: translateX(0);
         }
+        
+        /* NEW: Level Up Notification Styles */
+        #level-up-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%); /* Start off-screen vertically */
+            background: linear-gradient(135deg, #a855f7, #9333ea);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(147, 51, 234, 0.6);
+            font-weight: 800;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s, transform 0.5s ease-out;
+            max-width: 400px;
+            text-align: center;
+            border: 3px solid #d8b4fe;
+        }
+        #level-up-notification.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0); /* Move to screen center */
+        }
+        /* END NEW Level Up Notification Styles */
 
         .achievement-card {
             background-color: rgba(30, 41, 59, 0.7);
@@ -271,6 +332,13 @@
             background-color: rgba(16, 185, 129, 0.2);
             box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
         }
+        
+        /* Golden Bong Style */
+        .golden-bong .bong-glass {
+            fill: url(#goldGradient) !important;
+            stroke: #ffd700 !important;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+        }
     </style>
 </head>
 <body>
@@ -280,7 +348,6 @@
          style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); opacity: 1; background-size: cover; background-attachment: fixed; background-position: center;">
     </div>
 
-    <!-- SVG for the Cannabis Leaf Icon (fixed background element) -->
     <svg id="cannabis-leaf" class="leaf-bg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M50 0 L40 20 L20 15 L35 40 L20 60 L50 90 L80 60 L65 40 L80 15 L60 20 Z" fill="#10b981"/>
     </svg>
@@ -294,7 +361,6 @@
             A highly scientific test & mini-game with persistent upgrades.
         </p>
 
-        <!-- Main Navigation -->
         <div class="flex flex-wrap justify-center gap-4 mb-8">
             <button id="navInfoButton" class="fact-button nav-button">Info & Test</button>
             <button id="navMinigameButton" class="fact-button nav-button !bg-fuchsia-600 hover:!bg-fuchsia-700 !shadow-fuchsia-500/50">
@@ -308,19 +374,19 @@
             </button>
         </div>
 
-        <!-- ACHIEVEMENT NOTIFICATION (New Element) -->
         <div id="achievement-notification" class="hidden">
             <p class="text-xs">🏆 ACHIEVEMENT UNLOCKED!</p>
             <p id="achievement-name" class="text-xl mt-1"></p>
             <p id="achievement-reward" class="text-sm mt-1 text-black/80"></p>
         </div>
         
-        <!-- FIREBASE LOADING STATUS -->
-        <div id="loadingStatus" class="text-center text-white text-lg readable-text-shadow p-4 bg-emerald-600/50 rounded-lg mb-6 hidden">
-            <!-- Text content set by JS -->
+        <div id="level-up-notification" class="hidden">
+            <p class="text-sm">🚀 COSMIC SMOKING RANK INCREASED!</p>
+            <p id="level-up-name" class="text-2xl mt-1"></p>
         </div>
+        <div id="loadingStatus" class="text-center text-white text-lg readable-text-shadow p-4 bg-emerald-600/50 rounded-lg mb-6 hidden">
+            </div>
 
-        <!-- INFORMATION VIEW -->
         <div id="infoView" class="hidden">
             <div class="flex flex-wrap justify-center gap-4 mb-10">
                 <button class="fact-button" data-fact="mission">How does it work?</button>
@@ -334,37 +400,30 @@
             </div>
             
             <div class="flex justify-center mt-8">
-                <!-- Button now correctly points to the Mini-Game -->
                 <button id="beginTestButton" class="cta-button">Begin Test</button>
             </div>
         </div>
 
-        <!-- TEST VIEW (Placeholder/Legacy) -->
         <div id="testView" class="hidden">
             <p class="text-white text-center readable-text-shadow">Quick test is available by clicking "Begin Test" from the Info tab!</p>
             <p class="text-slate-400 text-center readable-text-shadow mt-2">Use the Mini-Game tab to play and earn coins.</p>
         </div>
         
-        <!-- MINIGAME VIEW -->
         <div id="minigameView" class="hidden text-center grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <!-- Game Area (Column 1 and 2 on large screens) -->
             <div class="lg:col-span-2 space-y-4">
                 <h2 class="text-3xl font-extrabold text-white tracking-wider glow-text readable-text-shadow">
                     EEDS SMOKE MINI-GAME
                 </h2>
 
-                <!-- Game Area Container -->
                 <div id="gameArea" class="weed-game-bg flex justify-center items-end relative h-[448px] w-full overflow-hidden rounded-xl">
                     
-                    <!-- Counters Display -->
                     <div id="counters" class="absolute top-0 left-0 right-0 p-2 flex justify-around text-white font-bold text-lg bg-black/50 rounded-t-xl readable-text-shadow">
                         <div id="hit-counter">Hits: 0</div>
                         <div id="gram-counter">Grams Smoked: 0.0g</div>
                         <div id="coin-counter" class="text-yellow-400">Coins: 0 💰</div> 
                     </div>
 
-                    <!-- Level & XP Bar Display -->
                     <div class="absolute top-[55px] left-0 right-0 px-4">
                         <div class="flex justify-between text-xs font-semibold text-white/80 readable-text-shadow">
                             <span id="level-display">LEVEL 1</span>
@@ -374,10 +433,10 @@
                             <div id="level-bar" class="level-bar" style="width: 0%;"></div>
                         </div>
                     </div>
+                    
+                    <div id="refill-loader" class="hidden">REFILLING...</div>
 
-
-                    <!-- Bong Icon (Inline SVG) -->
-                    <svg id="cosmic-bong" class="w-32 h-64 absolute bottom-[40px] right-1/2 translate-x-1/2 mr-10" viewBox="0 0 100 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg id="cosmic-bong" class="w-24 h-48 absolute bottom-[40px] right-1/2 translate-x-1/2 mr-4" viewBox="0 0 100 250" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <defs>
                             <radialGradient id="glassGradient" cx="50%" cy="50%" r="50%" fx="60%" fy="60%">
                                 <stop offset="0%" style="stop-color:rgb(255,255,255);stop-opacity:0.8" />
@@ -387,50 +446,63 @@
                                 <stop stop-color="#3b82f6"/>
                                 <stop offset="1" stop-color="#0ea5e9" stop-opacity="0.5"/>
                             </linearGradient>
+                            <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="250" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" style="stop-color:#ffe495;stop-opacity:1" />
+                                <stop offset="50%" style="stop-color:#ffd700;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#c8b04a;stop-opacity:1" />
+                            </linearGradient>
                         </defs>
-                        <path d="M10 250 Q 5 210, 25 200 H 75 Q 95 210, 90 250 Z" fill="url(#glassGradient)" stroke="#93c5fd" stroke-width="2" stroke-opacity="0.6"/>
+                        <path d="M10 250 Q 5 210, 25 200 H 75 Q 95 210, 90 250 Z" class="bong-glass" fill="url(#glassGradient)" stroke="#93c5fd" stroke-width="2" stroke-opacity="0.6"/>
                         <path d="M15 250 Q 10 220, 30 210 H 70 Q 90 220, 85 250 Z" fill="url(#waterGradient)"/>
-                        <rect x="35" y="20" width="30" height="190" fill="url(#glassGradient)" stroke="#93c5fd" stroke-width="2" rx="5"/>
+                        
+                        <path id="water-dirt-overlay" d="M15 250 Q 10 220, 30 210 H 70 Q 90 220, 85 250 Z" fill="#6d4128" style="opacity: 0; mix-blend-mode: multiply; transition: opacity 0.5s;"/>
+
+                        <rect id="bong-main-tube" x="35" y="20" width="30" height="190" class="bong-glass" fill="url(#glassGradient)" stroke="#93c5fd" stroke-width="2" rx="5"/>
+                        <rect id="dirt-overlay" x="35" y="20" width="30" height="190" fill="#6d4128" rx="5" style="mix-blend-mode: multiply; opacity: 0; transition: opacity 0.5s;"/>
+
                         <rect x="30" y="10" width="40" height="15" fill="#9333ea" stroke="#d8b4fe" stroke-width="2" rx="7"/>
                         <rect x="65" y="195" width="5" height="15" fill="#4b5563" transform="rotate(15 65 195)"/> 
+                        
                         <circle cx="78" cy="180" r="10" fill="#facc15" stroke="#f59e0b" stroke-width="2"/>
+                        <circle id="weed-stash" cx="78" cy="180" r="8" fill="#10b981" style="transition: all 0.1s ease-out;"/>
+                        <circle id="burning-ember" cx="78" cy="180" r="10" fill="#ff4400" opacity="0" style="transition: opacity 0.1s; filter: blur(2px); pointer-events: none;"/>
+                        
                         <circle cx="50" cy="225" r="5" fill="#e0f2fe" fill-opacity="0.8"/>
                         <circle cx="40" cy="235" r="3" fill="#e0f2fe" fill-opacity="0.8"/>
                     </svg>
 
-                    <!-- Eeds Character (Updated Livelier Look) -->
-                    <svg id="eeds-character" class="w-32 h-64 absolute bottom-[40px] right-1/2 translate-x-1/2 ml-10" viewBox="0 0 150 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="transition: transform 0.2s, rotate 0.2s;">
-                        <!-- Head (Slightly detailed face) -->
-                        <circle cx="120" cy="20" r="15" fill="#fef08a" stroke="#f59e0b" stroke-width="2"/>
-                        <circle cx="115" cy="18" r="1.5" fill="#333"/>
-                        <circle cx="125" cy="18" r="1.5" fill="#333"/>
-                        <path d="M115 25 Q 120 28, 125 25" stroke="#f59e0b" stroke-width="1.5" fill="none"/>
-                        <!-- Hair/Hat -->
-                        <path d="M108 8 Q 120 -5, 132 8 C 130 15, 120 18, 110 15 Z" fill="#444" stroke="#333" stroke-width="1"/>
-                        <!-- Body (Green Hoodie) -->
-                        <rect x="110" y="35" width="20" height="85" fill="#10b981" rx="5"/>
-                        <!-- Arms (Holding Bong) -->
-                        <path d="M120 50 L100 70 L95 100" stroke="#fef08a" stroke-width="5" stroke-linecap="round" fill="none"/>
-                        <!-- Legs -->
-                        <line x1="120" y1="120" x2="100" y2="150" stroke="#fef08a" stroke-width="5" stroke-linecap="round"/>
-                        <line x1="120" y1="120" x2="140" y2="150" stroke="#fef08a" stroke-width="5" stroke-linecap="round"/>
+                    <svg id="eeds-character" class="w-48 h-80 absolute bottom-[-48px] right-1/2 translate-x-1/2 ml-4" viewBox="0 0 150 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="transition: transform 0.2s, rotate 0.2s;">
+                        <circle cx="75" cy="20" r="15" fill="#fef08a" stroke="#f59e0b" stroke-width="2"/>
+                        <circle cx="70" cy="18" r="1.5" fill="#333"/>
+                        <circle cx="80" cy="18" r="1.5" fill="#333"/>
+                        <path id="eeds-mouth" d="M80 25 Q 85 28, 90 25" stroke="#a855f7" stroke-width="1.5" fill="none"/>
+                        <path d="M68 8 Q 75 -5, 82 8 C 80 15, 75 18, 70 15 Z" fill="#444" stroke="#333" stroke-width="1"/>
+                        <rect x="65" y="35" width="20" height="85" fill="#10b981" rx="5"/>
+                        <path d="M75 50 L95 70 L100 100" stroke="#fef08a" stroke-width="5" stroke-linecap="round" fill="none"/>
+                        <line x1="75" y1="120" x2="55" y2="150" stroke="#fef08a" stroke-width="5" stroke-linecap="round"/>
+                        <line x1="75" y1="120" x2="95" y2="150" stroke="#fef08a" stroke-width="5" stroke-linecap="round"/>
                     </svg>
                     
-                    <!-- CLICK INSTRUCTION TEXT -->
                     <p id="click-instruction" class="absolute bottom-[10px] left-1/2 transform -translate-x-1/2 text-lg font-bold text-lime-300 readable-text-shadow z-30 tracking-wider uppercase">
                         CLICK ON EEDSPEAKS
                     </p>
 
                 </div>
 
-                <!-- Win Bar (Hidden by default, content managed by JS) -->
+                <div class="flex justify-center mt-4 space-x-4">
+                    <div class="p-3 bg-red-800/50 text-white rounded-lg font-semibold readable-text-shadow flex items-center">
+                        <span class="text-xl mr-2">💧</span> Water Dirt: <span id="stat-water-dirt" class="ml-1">0 / 50</span>
+                    </div>
+                    <button id="changeWaterButton" class="cta-button !text-base !py-3 !px-6 !bg-blue-600 hover:!bg-blue-700 !shadow-blue-500/50" disabled>
+                        Change Water (100 💰)
+                    </button>
+                </div>
+                
                 <div id="win-bar" class="hidden mt-4 p-4 rounded-lg text-center font-extrabold text-2xl readable-text-shadow" 
                      style="background: linear-gradient(90deg, #facc15, #f59e0b, #facc15); box-shadow: 0 0 20px #facc15;">
-                    <!-- Content will be injected here -->
-                </div>
+                    </div>
             </div>
 
-            <!-- Stats Panel (Column 3 on large screens) -->
             <div class="lg:col-span-1 space-y-4">
                 <h3 class="text-2xl font-bold text-white text-center readable-text-shadow">
                     MY SMOKING PROFILE
@@ -439,6 +511,10 @@
                     <p class="text-lg font-bold text-yellow-400 text-center mb-2">
                         LEVEL <span id="current-level-stat">1</span>
                     </p>
+                    <div class="stat-item !border-b-2 !border-fuchsia-500 mb-2">
+                        <span class="text-slate-300 font-extrabold text-fuchsia-400">CURRENT RANK</span>
+                        <span id="stat-rank" class="font-extrabold text-white">Bud Novice</span>
+                    </div>
                     <div class="stat-item">
                         <span class="text-slate-300">Total Hits Taken</span>
                         <span id="stat-hits-taken" class="font-extrabold text-emerald-400">0</span>
@@ -455,44 +531,37 @@
                         <span class="text-slate-300">XP Until Next Level</span>
                         <span id="stat-xp-to-next" class="font-extrabold text-fuchsia-400">0</span>
                     </div>
+                    <div class="stat-item">
+                        <span class="text-slate-300">Bong Resin (Penalty)</span>
+                        <span id="stat-dirtiness" class="font-extrabold text-red-400">0%</span>
+                    </div>
                 </div>
             </div>
-            <!-- End Stats Panel -->
-
-        </div>
-        <!-- END MINIGAME VIEW -->
-
-        <!-- SHOP VIEW -->
+            </div>
         <div id="shopView" class="hidden">
             <h2 class="text-3xl font-extrabold text-white mb-4 tracking-wider glow-text readable-text-shadow text-center">
                 EEDSPEAKS SMOKE UPGRADES
             </h2>
             
-            <!-- GOLD COUNTER -->
             <div class="text-center mb-8 bg-black/30 p-4 rounded-xl border-b-4 border-yellow-500 shadow-lg">
                 <p class="text-4xl font-extrabold text-yellow-400 readable-text-shadow">
                     <span id="shop-coin-counter">0</span> 💰
                 </p>
                 <p class="text-lg text-slate-300 font-semibold">Your Current Balance</p>
             </div>
-            <!-- END GOLD COUNTER -->
-
             <p class="text-slate-300 mb-8 text-center readable-text-shadow">
                 Spend your gold coins to enhance Eeds' smoking power and efficiency!
             </p>
             <div id="shopItemsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Shop items will be rendered here by JavaScript -->
-            </div>
+                </div>
         </div>
 
-        <!-- ACHIEVEMENTS VIEW (New View) -->
         <div id="achievementsView" class="hidden">
              <h2 class="text-3xl font-extrabold text-white mb-6 tracking-wider glow-text readable-text-shadow text-center">
                 Smoking Milestones 🏆
             </h2>
             <div id="achievementsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Achievements will be rendered here -->
-            </div>
+                </div>
         </div>
         
     </div>
@@ -512,7 +581,7 @@
         };
         // =========================================================================
         
-        // --- GLOBAL CONSTANTS ---
+        // --- GLOBAL CONSTANTS (UPDATED BASE_MIN_HIT and BASE_MAX_HIT) ---
         const FACTS = {
             mission: "Simply click on the Begin Test button, and take a test to find out the true amount of Cannabis Eedspeaks smoked in a week.",
             founding: "Everything shown on the website is correct information obtained after years of years of regular investigation.",
@@ -526,13 +595,34 @@
         const BASE_BONUS_DROP_CHANCE = 0.2; 
         const BASE_BONUS_DROP_AMOUNT = 10; 
         
-        const BASE_DOUBLE_HIT_CHANCE = 0.1; 
-        const BASE_MIN_HIT = 0.1;
-        const BASE_MAX_HIT = 0.5;
+        const BASE_DOUBLE_HIT_CHANCE = 0.1;
+        
+        // --- NEW: CRITICAL HIT CONSTANTS ---
+        const CRITICAL_HIT_CHANCE = 0.01; // 1% chance
+        const CRITICAL_HIT_MULTIPLIER = 2.5; // 2.5x multiplier for grams and gold
+        // -----------------------------------
+
+        // --- UPDATED MIN/MAX HIT VALUES ---
+        const BASE_MIN_HIT = 0.01; // Changed from 0.1
+        const BASE_MAX_HIT = 0.2;  // Changed from 0.5
+        // ----------------------------------
+        
         const BASE_SMOKE_DELAY = 1000; 
         const BASE_XP = 50; 
         const XP_RATE = 1.6; 
         const MILESTONE_REWARD = 150; 
+        
+        const MAX_DIRTINESS = 100; 
+        const DIRTINESS_PENALTY_PER_UNIT = 0.005; 
+        const BONG_MASTER_COST = 100; 
+        const MAX_WATER_DIRTINESS = 100; 
+        const WATER_CHANGE_COST = 100; 
+        
+        const GOLDEN_BONG_COST = 2500;
+        const GOLDEN_BONG_MULTIPLIER = 3;
+
+        const MAX_HITS_PER_BOWL = 10; 
+        const REFILL_DURATION = 2000; // 2 seconds
 
         
         // --- SHOP ITEM CONFIGURATION ---
@@ -542,9 +632,11 @@
             { id: 'coin_chance', name: 'Hydroponic Setup', desc: 'Increases Bonus Gold Chance by +5%', baseCost: 150, coinChanceBoost: 0.05, maxPurchases: 4, icon: '🌱' },
             { id: 'coin_amount', name: 'Munchies Fund', desc: 'Increases Bonus Gold Amount by +10', baseCost: 200, coinAmountBoost: 10, maxPurchases: 5, icon: '🍔' },
             { id: 'double_chance', name: 'Concentrate Cart', desc: 'Increases Double Hit Chance by +2%', baseCost: 300, doubleChanceBoost: 0.02, maxPurchases: 5, icon: '🍯' },
+            { id: 'bong_master', name: 'Bong Master', desc: 'Instantly cleans the bong glass/resin.', baseCost: BONG_MASTER_COST, maxPurchases: 99, icon: '🧼' }, 
+            { id: 'golden_bong', name: 'Golden Bong', desc: `Triples all gold income!`, baseCost: GOLDEN_BONG_COST, maxPurchases: 1, icon: '🌟' }, 
         ];
         
-        // --- ACHIEVEMENTS CONFIGURATION (NEW) ---
+        // --- ACHIEVEMENTS CONFIGURATION ---
         const ACHIEVEMENTS_CONFIG = [
             { id: 'first_hit', name: 'First Toke', desc: 'Take your very first hit.', reward: 10, check: (state) => state.hits >= 1 },
             { id: 'baby_lungs', name: 'Baby Lungs', desc: 'Smoke 1.0 total grams.', reward: 25, check: (state) => state.gramsSmoked >= 1.0 },
@@ -554,30 +646,64 @@
             { id: 'high_roller', name: 'High Roller', desc: 'Earn 500 total gold coins.', reward: 75, check: (state) => state.goldEarnedTotal >= 500 },
             { id: 'max_level_gram', name: 'Maxed Grinder', desc: 'Max out the Grinder Upgrade (Level 5).', reward: 150, check: (state) => state.gramBoostLevel >= 5 },
             { id: 'level_5', name: 'Cosmic Smoker', desc: 'Reach Level 5.', reward: 200, check: (state) => state.currentLevel >= 5 },
+            { id: 'hyi_vittu', name: 'Hyi vittu', desc: 'Reach 100% Bong Dirtiness Level.', reward: 100, check: (state) => state.bongDirtiness >= MAX_DIRTINESS }, 
         ];
 
+        // --- CONSTANTS for Ranks ---
+        const RANKS_CONFIG = [
+            { grams: 1000, name: 'Eedspeaks' },
+            { grams: 500, name: 'Cosmic Smoker' },
+            { grams: 100, name: 'Master Grower' },
+            { grams: 28, name: 'Ounce Apprentice' },
+            { grams: 10, name: 'Grinder Starter' },
+            { grams: 5, name: 'Bong Brewer' },
+            { grams: 1, name: 'Joint Roller' },
+            { grams: 0, name: 'Bud Novice' },
+        ];
 
-        // --- DOM ELEMENTS ---
+        // --- NEW FUNCTION: Determine Current Rank ---
+        function getCurrentRank() {
+            for (const rank of RANKS_CONFIG) {
+                if (gameState.gramsSmoked >= rank.grams) {
+                    return rank.name;
+                }
+            }
+            return 'Unranked'; // Fallback
+        }
+
+        // --- DOM ELEMENTS (UPDATED FOR LEVEL UP NOTIFICATION) ---
         const infoView = document.getElementById('infoView');
         const testView = document.getElementById('testView');
         const minigameView = document.getElementById('minigameView');
         const shopView = document.getElementById('shopView');
-        const achievementsView = document.getElementById('achievementsView'); // New
+        const achievementsView = document.getElementById('achievementsView');
         const factDisplay = document.getElementById('factDisplay');
         const eedsCharacter = document.getElementById('eeds-character');
         const hitCounterDisplay = document.getElementById('hit-counter');
         const gramCounterDisplay = document.getElementById('gram-counter');
         const coinCounterDisplay = document.getElementById('coin-counter');
-        const shopCoinCounter = document.getElementById('shop-coin-counter'); 
+        const shopCoinCounter = document.getElementById('shop-coin-counter');
         const winBar = document.getElementById('win-bar');
         const loadingStatus = document.getElementById('loadingStatus');
         const shopItemsContainer = document.getElementById('shopItemsContainer');
-        const achievementsContainer = document.getElementById('achievementsContainer'); // New
-        const achievementNotification = document.getElementById('achievement-notification'); // New
-        const achievementNameDisplay = document.getElementById('achievement-name'); // New
-        const achievementRewardDisplay = document.getElementById('achievement-reward'); // New
-
-        // NEW STATS ELEMENTS
+        const achievementsContainer = document.getElementById('achievementsContainer');
+        
+        // Achievement Notif
+        const achievementNotification = document.getElementById('achievement-notification');
+        const achievementNameDisplay = document.getElementById('achievement-name');
+        const achievementRewardDisplay = document.getElementById('achievement-reward');
+        
+        // NEW Level Up Notif
+        const levelUpNotification = document.getElementById('level-up-notification');
+        const levelUpNameDisplay = document.getElementById('level-up-name');
+        
+        const dirtOverlay = document.getElementById('dirt-overlay');
+        const waterDirtOverlay = document.getElementById('water-dirt-overlay');
+        const changeWaterButton = document.getElementById('changeWaterButton');
+        const cosmicBong = document.getElementById('cosmic-bong');
+        const weedStash = document.getElementById('weed-stash');
+        const refillLoader = document.getElementById('refill-loader');
+        const burningEmber = document.getElementById('burning-ember');
         const levelDisplay = document.getElementById('level-display');
         const xpDisplay = document.getElementById('xp-display');
         const levelBar = document.getElementById('level-bar');
@@ -586,37 +712,46 @@
         const statGoldEarned = document.getElementById('stat-gold-earned');
         const statBiggestHit = document.getElementById('stat-biggest-hit');
         const statXpToNext = document.getElementById('stat-xp-to-next');
+        const statDirtiness = document.getElementById('stat-dirtiness');
+        const statWaterDirt = document.getElementById('stat-water-dirt');
+        const statRank = document.getElementById('stat-rank');
 
         // --- GAME STATE (Synced with Firebase) ---
         let gameState = {
             hits: 0,
             gramsSmoked: 0.0,
             goldCoins: 0,
-            gramBoostLevel: 0, 
-            speedBoostLevel: 0, 
+            gramBoostLevel: 0,
+            speedBoostLevel: 0,
             coinChanceLevel: 0,
             coinAmountLevel: 0,
             doubleChanceLevel: 0,
-            hasWon: false, 
-            currentLevel: 1, 
+            hasWon: false,
+            currentLevel: 1,
             xp: 0,
-            goldEarnedTotal: 0, 
+            goldEarnedTotal: 0,
             biggestHit: 0.0,
-            unlockedAchievements: {} // NEW: To store achievement IDs
+            unlockedAchievements: {},
+            bongDirtiness: 0,
+            bongWaterDirtiness: 0,
+            hasGoldenBong: false,
+            hitsSinceRefill: 0, 
         };
-        
-        // --- FIREBASE VARIABLES ---
+
+        // --- NON-STATE VARIABLES ---
         let db, auth, userId = null;
-        let isAuthReady = false; 
-        let isSmoking = false; 
-        let connectionMessage = ''; 
+        let isAuthReady = false;
+        let isSmoking = false;
+        let isRefilling = false; 
+        let connectionMessage = '';
         let isCanvasEnvironment = typeof __app_id !== 'undefined';
 
         // --- AUDIO/TONE.JS SETUP ---
         let clickSynth = null;
         let bubbleSynth = null;
         let coinSynth = null;
-        let achievementSynth = null; // New Synth for Achievements
+        let achievementSynth = null; // Reused for level up
+        let levelUpToneSynth = null; // Separate synth for distinct level up sound
 
         function initSynths() {
             if (clickSynth) return;
@@ -626,7 +761,11 @@
                 }
             }, { once: true });
 
-            clickSynth = new Tone.MembraneSynth({ pitchDecay: 0.01, octaves: 2, envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.01 } }).toDestination();
+            clickSynth = new Tone.MembraneSynth({
+                pitchDecay: 0.01,
+                octaves: 2,
+                envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.01 }
+            }).toDestination();
             clickSynth.volume.value = -5;
 
             bubbleSynth = new Tone.NoiseSynth({
@@ -650,10 +789,15 @@
                 envelope: { attack: 0.005, decay: 0.2, sustain: 0.01, release: 0.5 }
             }).toDestination();
             achievementSynth.volume.value = -5;
+            
+            levelUpToneSynth = new Tone.Synth({
+                oscillator: { type: "triangle" },
+                envelope: { attack: 0.01, decay: 0.5, sustain: 0.05, release: 0.5 }
+            }).toDestination();
+            levelUpToneSynth.volume.value = -3;
         }
 
         // --- FIREBASE INITIALIZATION & AUTH ---
-
         async function initFirebase() {
             if (!isCanvasEnvironment) {
                 console.log("Not in Canvas environment. Running with local fallbacks.");
@@ -662,18 +806,16 @@
                 renderShop();
                 return;
             }
-
             try {
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
                 const firebaseConfig = JSON.parse(__firebase_config);
                 const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                
                 const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore } = window.firebase;
-                
+
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                
+
                 if (initialAuthToken) {
                     await signInWithCustomToken(auth, initialAuthToken);
                 } else {
@@ -684,19 +826,22 @@
                     if (user) {
                         userId = user.uid;
                         listenToGameData(appId);
-                    } 
+                    }
                 });
 
             } catch (error) {
                 console.error("Firebase Initialization Error:", error);
                 isAuthReady = true;
+                connectionMessage = 'Error connecting to Firebase. Playing offline.';
+                loadingStatus.textContent = connectionMessage;
+                loadingStatus.classList.remove('bg-emerald-600/50', 'bg-red-600/50');
+                loadingStatus.classList.add('bg-yellow-600/50');
                 updateUI();
                 renderShop();
             }
         }
 
-        // --- FIRESTORE DATA HANDLING ---
-        
+        // --- FIRESTORE DATA HANDLING (Same as previous, just adding the function placeholder for completeness) ---
         function getGameDataRef(appId) {
             if (!db || !userId) {
                 return null;
@@ -728,7 +873,11 @@
                     xp: gameState.xp,
                     goldEarnedTotal: gameState.goldEarnedTotal,
                     biggestHit: gameState.biggestHit,
-                    unlockedAchievements: gameState.unlockedAchievements // NEW: Save achievements
+                    unlockedAchievements: gameState.unlockedAchievements,
+                    bongDirtiness: gameState.bongDirtiness,
+                    bongWaterDirtiness: gameState.bongWaterDirtiness,
+                    hasGoldenBong: gameState.hasGoldenBong,
+                    hitsSinceRefill: gameState.hitsSinceRefill, 
                 };
                 await window.firebase.setDoc(docRef, dataToSave, { merge: true });
             } catch (error) {
@@ -742,7 +891,7 @@
             const docRef = getGameDataRef(appId);
             if (!docRef) {
                 isAuthReady = true;
-                updateUI(); 
+                updateUI();
                 renderShop();
                 return;
             }
@@ -764,505 +913,567 @@
                         xp: data.xp || 0,
                         goldEarnedTotal: data.goldEarnedTotal || 0,
                         biggestHit: parseFloat(data.biggestHit) || 0.0,
-                        unlockedAchievements: data.unlockedAchievements || {} // NEW: Load achievements
+                        unlockedAchievements: data.unlockedAchievements || {},
+                        bongDirtiness: data.bongDirtiness || 0,
+                        bongWaterDirtiness: data.bongWaterDirtiness || 0,
+                        hasGoldenBong: data.hasGoldenBong || false,
+                        hitsSinceRefill: data.hitsSinceRefill || 0, 
                     };
+                    isAuthReady = true;
+                    connectionMessage = 'Connected to Firebase. Game data loaded.';
+                    loadingStatus.classList.remove('bg-yellow-600/50', 'bg-red-600/50');
+                    loadingStatus.classList.add('bg-emerald-600/50');
+                    checkForAchievements(); 
                 } else {
-                    saveGameState(); // Create default document
+                    // Initialize new user data if no document exists
+                    isAuthReady = true;
+                    connectionMessage = 'New user profile created. Ready to play!';
+                    loadingStatus.classList.remove('bg-yellow-600/50', 'bg-red-600/50');
+                    loadingStatus.classList.add('bg-emerald-600/50');
+                    saveGameState();
                 }
-                isAuthReady = true;
-                connectionMessage = 'Connected to Eeds Game. Good luck!';
-                loadingStatus.textContent = connectionMessage;
-                loadingStatus.classList.remove('bg-yellow-600/50', 'bg-red-600/50');
-                loadingStatus.classList.add('bg-emerald-600/50');
-
                 updateUI();
-                renderShop(); 
-                renderAchievements(); // Ensure achievements are checked on load
-                checkAchievements(); 
-
+                renderShop();
+                renderAchievements();
             }, (error) => {
-                console.error("Firestore listen error:", error);
+                console.error("Error listening to game data:", error);
                 isAuthReady = true;
-                connectionMessage = 'Error loading stats. Playing offline.';
+                connectionMessage = 'Error fetching live data. Playing offline backup.';
                 loadingStatus.textContent = connectionMessage;
                 loadingStatus.classList.remove('bg-emerald-600/50', 'bg-red-600/50');
                 loadingStatus.classList.add('bg-yellow-600/50');
                 updateUI();
                 renderShop();
+                renderAchievements();
             });
+        }
+
+        // --- GAME LOGIC ---
+
+        function calculateHitAmount() {
+            const baseMin = BASE_MIN_HIT; // 0.01
+            const baseMax = BASE_MAX_HIT; // 0.2
+            
+            // Max Hit = BASE_MAX_HIT + (Gram Boost Level * Gram Boost per level)
+            const maxHit = baseMax + (gameState.gramBoostLevel * 0.1); 
+            
+            // --- NON-UNIFORM DISTRIBUTION: Higher values have a lower chance ---
+            // Use a power curve (e.g., power of 3) to weight the random number towards 0.
+            let power = 3; 
+            let randomValue = Math.random();
+            let mappedValue = Math.pow(randomValue, power); 
+            
+            // Map mappedValue (0 to 1) to the desired hit range [baseMin, maxHit]
+            let hitAmount = baseMin + (mappedValue * (maxHit - baseMin)); 
+            // -------------------------------------------------------------------
+
+            // Apply Dirtiness Penalty
+            const dirtinessPenalty = (gameState.bongDirtiness + gameState.bongWaterDirtiness) * DIRTINESS_PENALTY_PER_UNIT;
+            hitAmount *= (1 - Math.min(1, dirtinessPenalty)); 
+
+            // Double Hit Chance
+            const doubleChance = BASE_DOUBLE_HIT_CHANCE + (gameState.doubleChanceLevel * 0.02);
+            if (Math.random() < doubleChance) {
+                hitAmount *= 2;
+                // Note: Hit message will be applied in triggerBongHit based on isCriticalHit
+            }
+
+            return Math.max(0.01, hitAmount); // Ensure minimum is respected
         }
         
-        // --- LEVELING LOGIC ---
-        function xpForNextLevel(level) {
-            // XP scales exponentially: 50 * 1.6^(level-1)
-            return Math.floor(BASE_XP * Math.pow(XP_RATE, level - 1));
-        }
-
-        function checkLevelUp() {
-            let leveledUp = false;
-            let requiredXP = xpForNextLevel(gameState.currentLevel);
-
-            while (gameState.xp >= requiredXP) {
-                gameState.xp -= requiredXP;
-                gameState.currentLevel += 1;
-                requiredXP = xpForNextLevel(gameState.currentLevel);
-                leveledUp = true;
-                console.log(`Leveled Up! New Level: ${gameState.currentLevel}`);
+        function calculateGoldGained(hitAmount) {
+            let gold = Math.floor(hitAmount * BASE_GOLD_PER_GRAM);
+            
+            // Bonus Gold Drop Chance
+            const bonusChance = BASE_BONUS_DROP_CHANCE + (gameState.coinChanceLevel * 0.05);
+            if (Math.random() < bonusChance) {
+                let bonusAmount = BASE_BONUS_DROP_AMOUNT + (gameState.coinAmountLevel * 10);
+                gold += bonusAmount;
             }
-            return leveledUp;
+            
+            // Golden Bong Multiplier
+            if (gameState.hasGoldenBong) {
+                gold *= GOLDEN_BONG_MULTIPLIER;
+                gold = Math.floor(gold);
+            }
+            
+            return gold;
         }
 
-        // --- ACHIEVEMENT LOGIC (NEW) ---
-        function checkAchievements() {
-            let newlyUnlocked = [];
+        function triggerBongHit() {
+            if (isSmoking || isRefilling) return;
 
-            ACHIEVEMENTS_CONFIG.forEach(ach => {
-                const isUnlocked = gameState.unlockedAchievements[ach.id];
-                if (!isUnlocked && ach.check(gameState)) {
-                    // Unlock the achievement
-                    gameState.unlockedAchievements[ach.id] = true;
-                    gameState.goldCoins += ach.reward;
-                    gameState.goldEarnedTotal += ach.reward;
-                    newlyUnlocked.push(ach);
+            initSynths();
+
+            // 1. Check for Critical Hit
+            let isCriticalHit = Math.random() < CRITICAL_HIT_CHANCE;
+            
+            // 2. Check for refill requirement (only if not a critical hit)
+            if (!isCriticalHit && gameState.hitsSinceRefill >= MAX_HITS_PER_BOWL) {
+                startRefillAnimation();
+                return;
+            }
+
+            isSmoking = true;
+            
+            // Play smoking animations and sounds
+            eedsCharacter.classList.remove('swaying');
+            eedsCharacter.classList.add('smoking');
+            if (clickSynth) clickSynth.triggerAttackRelease("C3", "8n");
+            if (bubbleSynth) bubbleSynth.triggerAttackRelease("4n");
+            
+            // Show weed ember and smoke puff
+            burningEmber.style.opacity = 1;
+            const smokePuff = document.createElement('div');
+            smokePuff.classList.add('smoke-puff');
+            document.getElementById('gameArea').appendChild(smokePuff);
+            
+            setTimeout(() => {
+                // Remove animations and smoke
+                eedsCharacter.classList.remove('smoking');
+                eedsCharacter.classList.add('swaying');
+                burningEmber.style.opacity = 0;
+                smokePuff.remove();
+                
+                // Exhale animation
+                const smokeExhale = document.createElement('div');
+                smokeExhale.classList.add('smoke-exhale');
+                document.getElementById('gameArea').appendChild(smokeExhale);
+                setTimeout(() => smokeExhale.remove(), 1500);
+
+                // Game state update
+                let hitAmount = calculateHitAmount();
+                let goldGained = calculateGoldGained(hitAmount);
+                let hitMessageColor = 'text-emerald-400';
+                let hitMessagePrefix = '';
+
+                if (isCriticalHit) {
+                    hitAmount *= CRITICAL_HIT_MULTIPLIER;
+                    goldGained = Math.floor(goldGained * CRITICAL_HIT_MULTIPLIER);
+                    hitMessageColor = 'text-red-500';
+                    hitMessagePrefix = '🔥 CRITICAL SMOKE! 🔥 ';
+                } else if (hitAmount > BASE_MAX_HIT * 2) { // Check for double hit after base calculation
+                     hitMessagePrefix = 'DOUBLE HIT! ';
+                     hitMessageColor = 'text-fuchsia-400';
+                }
+                
+                // Final Hit Message Display
+                displayHitMessage(`${hitMessagePrefix}+${hitAmount.toFixed(2)}g (+${goldGained}💰)`, hitMessageColor);
+                if (isCriticalHit && achievementSynth) {
+                    // Distinct sound for Critical Hit
+                    const now = Tone.now();
+                    achievementSynth.triggerAttackRelease("F#5", "16n", now);
+                    achievementSynth.triggerAttackRelease("C#6", "8n", now + 0.1); 
+                }
+
+                // Apply state changes
+                gameState.hits += 1;
+                gameState.gramsSmoked += hitAmount;
+                gameState.goldCoins += goldGained;
+                gameState.goldEarnedTotal += goldGained;
+                gameState.biggestHit = Math.max(gameState.biggestHit, hitAmount);
+                
+                // Only increase dirtiness and bowl count if NOT a critical hit
+                if (!isCriticalHit) {
+                    gameState.bongDirtiness = Math.min(MAX_DIRTINESS, gameState.bongDirtiness + 1);
+                    gameState.bongWaterDirtiness = Math.min(MAX_WATER_DIRTINESS, gameState.bongWaterDirtiness + 1);
+                    gameState.hitsSinceRefill += 1;
+                }
+                
+                // XP and Level Up
+                addXP(hitAmount * 10);
+
+                checkForAchievements();
+                
+                if (gameState.hasWon) {
+                    displayWinState();
+                } else if (gameState.gramsSmoked >= WIN_GRAMS) {
+                    gameState.hasWon = true;
+                    displayWinState();
+                }
+
+                updateUI();
+                
+                isSmoking = false;
+
+            }, getSmokeDelay());
+        }
+
+        function getSmokeDelay() {
+            // Delay = BASE_SMOKE_DELAY - (Speed Boost Level * 10% of BASE_SMOKE_DELAY)
+            const speedReduction = BASE_SMOKE_DELAY * (gameState.speedBoostLevel * 0.1);
+            return Math.max(500, BASE_SMOKE_DELAY - speedReduction); // Minimum delay of 500ms
+        }
+        
+        function startRefillAnimation() {
+            isRefilling = true;
+            refillLoader.classList.remove('hidden');
+            eedsCharacter.classList.remove('swaying');
+            eedsCharacter.classList.add('refilling');
+            weedStash.style.fill = '#facc15'; // Change color to indicate it's empty/being refilled
+            
+            setTimeout(() => {
+                // Refill complete
+                gameState.hitsSinceRefill = 0;
+                weedStash.style.fill = '#10b981'; // Reset color
+                refillLoader.classList.add('hidden');
+                eedsCharacter.classList.remove('refilling');
+                eedsCharacter.classList.add('swaying');
+                isRefilling = false;
+                updateUI();
+                displayHitMessage('BOWL REFILLED!', 'text-yellow-400');
+            }, REFILL_DURATION);
+        }
+
+        function displayHitMessage(message, colorClass) {
+            const hitMessage = document.createElement('p');
+            hitMessage.textContent = message;
+            hitMessage.classList.add('hit-message', 'text-xl', 'sm:text-2xl', 'md:text-3xl', 'glow-text', colorClass);
+            document.getElementById('gameArea').appendChild(hitMessage);
+
+            // Trigger animation
+            hitMessage.style.animation = 'fade-up-left 1.5s ease-out forwards';
+
+            setTimeout(() => hitMessage.remove(), 1500);
+        }
+        
+        function displayWinState() {
+            winBar.classList.remove('hidden');
+            winBar.textContent = `🥳 Congratulations! You reached Eeds' weekly limit of ${WIN_GRAMS}g! The game continues...`;
+        }
+
+        function changeBongWater() {
+            if (gameState.goldCoins >= WATER_CHANGE_COST) {
+                gameState.goldCoins -= WATER_CHANGE_COST;
+                gameState.bongWaterDirtiness = 0;
+                displayHitMessage('WATER CHANGED!', 'text-blue-400');
+                updateUI();
+            }
+        }
+        
+        // --- LEVELING SYSTEM (UPDATED) ---
+
+        function getXPForNextLevel(level) {
+            return Math.floor(BASE_XP * (XP_RATE ** (level - 1)));
+        }
+
+        function addXP(amount) {
+            gameState.xp += amount;
+            
+            let xpNeeded = getXPForNextLevel(gameState.currentLevel);
+
+            while (gameState.xp >= xpNeeded) {
+                gameState.xp -= xpNeeded;
+                gameState.currentLevel++;
+                checkForAchievements();
+                
+                // Notify Level Up - USING THE NEW DEDICATED NOTIFICATION
+                showLevelUpNotification(gameState.currentLevel); 
+                
+                // Calculate XP for the *new* level
+                xpNeeded = getXPForNextLevel(gameState.currentLevel);
+            }
+        }
+        
+        // --- ACHIEVEMENTS ---
+        
+        function checkForAchievements() {
+            let newlyUnlocked = false;
+            ACHIEVEMENTS_CONFIG.forEach(achievement => {
+                if (!gameState.unlockedAchievements[achievement.id] && achievement.check(gameState)) {
+                    // Unlock it!
+                    gameState.unlockedAchievements[achievement.id] = true;
+                    gameState.goldCoins += achievement.reward;
+                    gameState.goldEarnedTotal += achievement.reward;
+                    showAchievementNotification(achievement.name, achievement.reward);
+                    newlyUnlocked = true;
                 }
             });
-
-            if (newlyUnlocked.length > 0) {
-                saveGameState(); // Save state immediately after unlocking
-                updateUI();
-                renderAchievements(); // Update the achievement view
-                
-                // Show notification for the first unlocked achievement (for simplicity)
-                const firstNew = newlyUnlocked[0];
-                showAchievementNotification(firstNew.name, firstNew.reward);
-                
-                // Play achievement sound
-                if (achievementSynth) {
-                    const now = Tone.now();
-                    achievementSynth.triggerAttackRelease("C5", "16n", now);
-                    achievementSynth.triggerAttackRelease("E5", "16n", now + 0.1); 
-                    achievementSynth.triggerAttackRelease("G5", "8n", now + 0.2);
-                }
+            if (newlyUnlocked) {
+                renderAchievements(); // Refresh achievements view
             }
         }
 
         function showAchievementNotification(name, reward) {
-            achievementNameDisplay.textContent = name;
-            achievementRewardDisplay.textContent = `+${reward} Gold 💰`;
-            achievementNotification.classList.remove('hidden');
+            // FIX: Tone.js v14.x array argument error fix applied here
+            if (achievementSynth) {
+                const now = Tone.now();
+                achievementSynth.triggerAttackRelease("C5", "16n", now);
+                achievementSynth.triggerAttackRelease("G5", "8n", now + 0.1); 
+            }
             
-            // Trigger animation
+            achievementNameDisplay.textContent = name;
+            achievementRewardDisplay.textContent = `Reward: ${reward} 💰`;
+            
+            achievementNotification.classList.remove('hidden');
+            void achievementNotification.offsetHeight; 
+            achievementNotification.classList.remove('show');
+
             setTimeout(() => {
                 achievementNotification.classList.add('show');
             }, 50);
 
-            // Hide after 4 seconds
             setTimeout(() => {
                 achievementNotification.classList.remove('show');
-                setTimeout(() => {
-                    achievementNotification.classList.add('hidden');
-                }, 500); // Wait for transition to finish
+                setTimeout(() => achievementNotification.classList.add('hidden'), 500);
             }, 4000);
         }
-        // --- END ACHIEVEMENT LOGIC ---
-
-        // --- CLAIM REWARD FUNCTION ---
-        function claimMilestoneReward() {
-            if (gameState.gramsSmoked < WIN_GRAMS || gameState.hasWon) return; 
-
-            // Give the 150 gold reward
-            gameState.goldCoins += MILESTONE_REWARD; 
-            gameState.goldEarnedTotal += MILESTONE_REWARD;
-            gameState.hasWon = true;
-            
-            if(coinSynth) {
+        
+        // --- NEW FUNCTION: Level Up Notification ---
+        function showLevelUpNotification(newLevel) {
+            if (levelUpToneSynth) {
                 const now = Tone.now();
-                coinSynth.triggerAttackRelease("C6", "8n", now);
-                coinSynth.triggerAttackRelease("E6", "8n", now + 0.1); 
-                coinSynth.triggerAttackRelease("G6", "8n", now + 0.2);
+                levelUpToneSynth.triggerAttackRelease("G4", "16n", now);
+                levelUpToneSynth.triggerAttackRelease("C5", "8n", now + 0.1);
+                levelUpToneSynth.triggerAttackRelease("E5", "4n", now + 0.25);
             }
             
-            saveGameState();
-            updateUI(); 
-        }
-        // --- END CLAIM REWARD FUNCTION ---
-
-        // --- GAME LOGIC ---
-        function updateUI() {
-            const currentLevel = gameState.currentLevel;
-            const currentXP = gameState.xp;
-            const requiredXP = xpForNextLevel(currentLevel);
-
-            // General Counters
-            hitCounterDisplay.textContent = `Hits: ${gameState.hits}`;
-            gramCounterDisplay.textContent = `Grams Smoked: ${gameState.gramsSmoked.toFixed(1)}g`;
-            coinCounterDisplay.textContent = `Coins: ${gameState.goldCoins} 💰`;
-            if (shopCoinCounter) {
-                 shopCoinCounter.textContent = gameState.goldCoins; 
-            }
-
-            // Leveling/XP Bar
-            const xpProgress = (currentXP / requiredXP) * 100;
-            levelDisplay.textContent = `LEVEL ${currentLevel}`;
-            xpDisplay.textContent = `${currentXP} / ${requiredXP} XP`;
-            levelBar.style.width = `${Math.min(100, xpProgress)}%`;
-
-            // Stats Panel
-            currentLevelStat.textContent = currentLevel;
-            statHitsTaken.textContent = gameState.hits;
-            statGoldEarned.textContent = gameState.goldEarnedTotal;
-            statBiggestHit.textContent = gameState.biggestHit.toFixed(1);
-            statXpToNext.textContent = requiredXP - currentXP;
-
-
-            // 20G Milestone logic with CLAIM button
-            if (gameState.gramsSmoked >= WIN_GRAMS) {
-                winBar.classList.remove('hidden');
-                if (!gameState.hasWon) {
-                    winBar.innerHTML = `
-                        <p class="animate-pulse">🎉 EEDS JUST SMOKED ${WIN_GRAMS} GRAMS! REWARD AVAILABLE! 🚀</p>
-                        <button id="claimRewardButton" class="mt-3 px-6 py-2 bg-red-600 text-white font-bold rounded-full shadow-lg hover:bg-red-700 transition">
-                            CLAIM REWARD! (+${MILESTONE_REWARD} 💰)
-                        </button>
-                    `;
-                    document.getElementById('claimRewardButton')?.addEventListener('click', claimMilestoneReward);
-
-                } else {
-                    winBar.innerHTML = `
-                        <p class="text-xl">✅ MILESTONE CLAIMED: ${WIN_GRAMS} GRAMS SMOKED!</p>
-                        <p class="text-sm text-yellow-800 font-normal">You earned ${MILESTONE_REWARD} gold!</p>
-                    `;
-                }
-            } else {
-                winBar.classList.add('hidden');
-            }
-        }
-
-        function getShopItemState(itemConfig) {
-            let currentLevel = 0;
-            switch(itemConfig.id) {
-                case 'gram_boost': currentLevel = gameState.gramBoostLevel; break;
-                case 'speed_boost': currentLevel = gameState.speedBoostLevel; break;
-                case 'coin_chance': currentLevel = gameState.coinChanceLevel; break;
-                case 'coin_amount': currentLevel = gameState.coinAmountLevel; break;
-                case 'double_chance': currentLevel = gameState.doubleChanceLevel; break;
-            }
-
-            const cost = itemConfig.baseCost * (currentLevel + 1);
-            const isMaxed = currentLevel >= itemConfig.maxPurchases;
+            levelUpNameDisplay.textContent = `LEVEL ${newLevel}!`;
             
-            return { cost, currentLevel, isMaxed };
+            levelUpNotification.classList.remove('hidden');
+            void levelUpNotification.offsetHeight; 
+            levelUpNotification.classList.remove('show');
+
+            setTimeout(() => {
+                levelUpNotification.classList.add('show');
+            }, 50);
+
+            setTimeout(() => {
+                levelUpNotification.classList.remove('show');
+                setTimeout(() => levelUpNotification.classList.add('hidden'), 500);
+            }, 3500);
+        }
+        // --- END NEW FUNCTION ---
+
+        function renderAchievements() {
+            if (!achievementsContainer) return;
+
+            achievementsContainer.innerHTML = ACHIEVEMENTS_CONFIG.map(ach => {
+                const isUnlocked = gameState.unlockedAchievements[ach.id];
+                const cardClass = isUnlocked ? 'achievement-card unlocked' : 'achievement-card';
+                const statusIcon = isUnlocked ? '✅' : '🔒';
+
+                return `
+                    <div class="${cardClass} p-4 rounded-xl shadow-lg transition-all duration-300">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xl font-bold ${isUnlocked ? 'text-emerald-300' : 'text-slate-400'}">
+                                ${statusIcon} ${ach.name}
+                            </p>
+                        </div>
+                        <p class="text-slate-400 text-sm italic mb-3">${ach.desc}</p>
+                        <p class="text-sm font-semibold ${isUnlocked ? 'text-yellow-400' : 'text-fuchsia-400'}">
+                            Reward: ${ach.reward} 💰
+                        </p>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // --- SHOP FUNCTIONS (Same as previous) ---
+
+        function calculateCost(baseCost, level) {
+            // Simple exponential cost increase
+            return Math.floor(baseCost * (1.5 ** level));
         }
 
         function renderShop() {
-            if (shopView.classList.contains('hidden')) return; 
-
-            if (shopCoinCounter) {
-                 shopCoinCounter.textContent = gameState.goldCoins; 
-            }
-
-            shopItemsContainer.innerHTML = ''; 
-
-            SHOP_ITEMS_CONFIG.forEach(itemConfig => {
-                const { cost, currentLevel, isMaxed } = getShopItemState(itemConfig);
-
-                const itemHtml = `
-                    <div class="shop-item p-4 rounded-xl shadow-2xl transition duration-300 hover:scale-[1.02]">
-                        <div class="flex items-center mb-3">
-                            <span class="text-3xl mr-3">${itemConfig.icon}</span>
-                            <h3 class="text-2xl font-bold text-white">${itemConfig.name}</h3>
-                        </div>
-                        <p class="text-slate-300 mb-2">${itemConfig.desc}</p>
-                        <p class="text-lg font-semibold text-emerald-400 mb-4">Level: ${currentLevel} / ${itemConfig.maxPurchases}</p>
-                        
-                        <button 
-                            data-item-id="${itemConfig.id}" 
-                            data-cost="${cost}"
-                            ${isMaxed || gameState.goldCoins < cost ? 'disabled' : ''}
-                            class="shop-buy-button w-full">
-                            ${isMaxed ? 'MAX LEVEL' : `BUY for ${cost} 💰`}
-                        </button>
-                    </div>
-                `;
-                shopItemsContainer.insertAdjacentHTML('beforeend', itemHtml);
-            });
-
-            shopItemsContainer.querySelectorAll('.shop-buy-button').forEach(button => {
-                if (!button.disabled) {
-                    button.addEventListener('click', handlePurchase);
-                }
-            });
-        }
-        
-        // --- NEW: Render Achievements View ---
-        function renderAchievements() {
-            if (achievementsView.classList.contains('hidden')) return; 
-
-            achievementsContainer.innerHTML = '';
-
-            ACHIEVEMENTS_CONFIG.forEach(ach => {
-                const isUnlocked = gameState.unlockedAchievements[ach.id];
-                const cardClass = isUnlocked ? 'unlocked' : 'locked';
-                const icon = isUnlocked ? '✅' : '🔒';
-                const textColor = isUnlocked ? 'text-emerald-300' : 'text-slate-400';
-                const progressText = isUnlocked ? 'Completed!' : 'Not yet earned.';
-
-                const achHtml = `
-                    <div class="achievement-card p-5 rounded-xl space-y-2 ${cardClass}">
-                        <div class="flex items-start justify-between">
-                            <h3 class="text-xl font-bold text-white">${icon} ${ach.name}</h3>
-                            <span class="text-yellow-400 font-extrabold text-lg flex-shrink-0">
-                                +${ach.reward} 💰
-                            </span>
-                        </div>
-                        <p class="${textColor} text-sm">${ach.desc}</p>
-                        <p class="text-xs font-semibold text-white/70">${progressText}</p>
-                    </div>
-                `;
-                achievementsContainer.insertAdjacentHTML('beforeend', achHtml);
-            });
-        }
-        // --- END Render Achievements View ---
-
-        function handlePurchase(event) {
-            const itemId = event.target.getAttribute('data-item-id');
-            const cost = parseInt(event.target.getAttribute('data-cost'));
-            const itemConfig = SHOP_ITEMS_CONFIG.find(i => i.id === itemId);
-
-            if (!itemConfig) return console.error("Invalid item ID");
-
-            if (gameState.goldCoins >= cost) {
-                gameState.goldCoins -= cost;
-                
-                switch(itemId) {
-                    case 'gram_boost': gameState.gramBoostLevel += 1; break;
-                    case 'speed_boost': gameState.speedBoostLevel += 1; break;
-                    case 'coin_chance': gameState.coinChanceLevel += 1; break;
-                    case 'coin_amount': gameState.coinAmountLevel += 1; break;
-                    case 'double_chance': gameState.doubleChanceLevel += 1; break;
-                }
-                
-                if(coinSynth) {
-                    coinSynth.triggerAttackRelease("C5", "16n", Tone.now());
-                    coinSynth.triggerAttackRelease("E5", "16n", Tone.now() + 0.05);
-                }
-
-                checkAchievements(); // Check achievements after purchase (for max level achievements)
-                saveGameState();
-                updateUI();
-                renderShop(); 
-            } else {
-                if(coinSynth) coinSynth.triggerAttackRelease("C2", "16n", Tone.now(), 0.5);
-            }
-        }
-
-        function getSmokeDelay() {
-            const speedBoost = gameState.speedBoostLevel * (SHOP_ITEMS_CONFIG.find(i => i.id === 'speed_boost')?.speedBoost || 0);
-            const reductionFactor = Math.min(0.5, speedBoost); 
-            return BASE_SMOKE_DELAY * (1 - reductionFactor);
-        }
-
-        function getCurrentHitRange() {
-            const gramBoost = gameState.gramBoostLevel * (SHOP_ITEMS_CONFIG.find(i => i.id === 'gram_boost')?.gramBoost || 0);
-            const min = BASE_MIN_HIT;
-            const max = BASE_MAX_HIT + gramBoost;
-            const calculatedMin = Math.max(0.1, Math.min(min, max)); 
-            return { min: calculatedMin, max: max };
-        }
-
-        function getRandomHitSize() {
-            const { min, max } = getCurrentHitRange();
-            return Math.random() * (max - min) + min; 
-        }
-
-        function getCalculatedBonusCoinChance() {
-            const chanceBoost = gameState.coinChanceLevel * (SHOP_ITEMS_CONFIG.find(i => i.id === 'coin_chance')?.coinChanceBoost || 0);
-            return Math.min(1.0, BASE_BONUS_DROP_CHANCE + chanceBoost);
-        }
-
-        function getCalculatedBonusCoinAmount() {
-            const amountBoost = gameState.coinAmountLevel * (SHOP_ITEMS_CONFIG.find(i => i.id === 'coin_amount')?.coinAmountBoost || 0);
-            return BASE_BONUS_DROP_AMOUNT + amountBoost;
-        }
-
-        function getCalculatedDoubleChance() {
-            const chanceBoost = gameState.doubleChanceLevel * (SHOP_ITEMS_CONFIG.find(i => i.id === 'double_chance')?.doubleChanceBoost || 0);
-            return Math.min(0.5, BASE_DOUBLE_HIT_CHANCE + chanceBoost); 
-        }
-
-        function triggerBongHit() {
-            const smokeDelay = getSmokeDelay();
+            if (!shopItemsContainer) return;
             
-            if (isSmoking || !isAuthReady) {
+            shopCoinCounter.textContent = gameState.goldCoins.toLocaleString();
+            
+            shopItemsContainer.innerHTML = SHOP_ITEMS_CONFIG.map(item => {
+                const currentLevel = gameState[`${item.id}Level`] || 0;
+                const nextLevel = currentLevel + 1;
+                const isMaxLevel = item.maxPurchases && currentLevel >= item.maxPurchases;
+                
+                let cost, buttonText;
+                
+                if (item.id === 'bong_master') {
+                    // Special case: Bong Master (Resin Cleaner)
+                    cost = item.baseCost;
+                    buttonText = `Clean Resin (${cost} 💰)`;
+                } else if (item.id === 'golden_bong') {
+                    // Special case: Golden Bong (Max 1 purchase)
+                    cost = item.baseCost;
+                    buttonText = gameState.hasGoldenBong ? 'PURCHASED' : `Buy Golden Bong (${cost} 💰)`;
+                } else {
+                    // Standard Upgrade
+                    cost = calculateCost(item.baseCost, currentLevel);
+                    buttonText = isMaxLevel ? 'MAX LEVEL' : `Upgrade (${cost} 💰)`;
+                }
+                
+                const isDisabled = gameState.goldCoins < cost || isMaxLevel || gameState.hasGoldenBong && item.id === 'golden_bong';
+                const levelDisplay = isMaxLevel ? 'MAX' : currentLevel;
+                const maxDisplay = item.maxPurchases ? ` / ${item.maxPurchases}` : '';
+
+                return `
+                    <div class="shop-item p-4 rounded-xl shadow-xl flex flex-col justify-between">
+                        <div>
+                            <p class="text-3xl mb-2">${item.icon}</p>
+                            <h4 class="text-xl font-bold text-white mb-1">${item.name}</h4>
+                            <p class="text-slate-400 text-sm mb-3">${item.desc}</p>
+                        </div>
+                        <div class="mt-4">
+                            <p class="text-lg font-bold text-fuchsia-400 mb-2">
+                                LEVEL: ${levelDisplay}${maxDisplay}
+                            </p>
+                            <button class="shop-buy-button w-full text-base font-extrabold" 
+                                    data-id="${item.id}"
+                                    data-cost="${cost}"
+                                    ${isDisabled ? 'disabled' : ''}>
+                                ${buttonText}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Re-attach event listeners after innerHTML update
+            document.querySelectorAll('.shop-buy-button').forEach(button => {
+                button.addEventListener('click', handleShopPurchase);
+            });
+        }
+
+        function handleShopPurchase(event) {
+            const button = event.currentTarget;
+            const itemId = button.getAttribute('data-id');
+            const cost = parseInt(button.getAttribute('data-cost'));
+            
+            if (gameState.goldCoins < cost || button.disabled) {
                 return;
             }
-            if (Tone.context.state !== 'running') {
-                Tone.start();
+            
+            gameState.goldCoins -= cost;
+            
+            if (itemId === 'bong_master') {
+                // Bong Master purchase: clean the resin
+                gameState.bongDirtiness = 0;
+                displayHitMessage('BONG RESIN CLEANED!', 'text-green-400');
+            } else if (itemId === 'golden_bong') {
+                // Golden Bong purchase
+                gameState.hasGoldenBong = true;
+                displayHitMessage('GOLDEN BONG ACQUIRED!', 'text-yellow-400');
+            } else {
+                // Standard upgrade purchase
+                gameState[`${itemId}Level`] = (gameState[`${itemId}Level`] || 0) + 1;
+                displayHitMessage(`+1 ${SHOP_ITEMS_CONFIG.find(i => i.id === itemId).name}!`, 'text-fuchsia-400');
             }
 
-            const now = Tone.now();
-            isSmoking = true; 
-
-            const doubleHitChance = getCalculatedDoubleChance();
-            const isDoubleHit = Math.random() < doubleHitChance;
-            let currentHitSize = getRandomHitSize();
-            
-            if (isDoubleHit) {
-                currentHitSize *= 2;
-            }
-            currentHitSize = parseFloat(currentHitSize.toFixed(2)); 
-            
-            // --- 1. GOLD REWARD CALCULATION ---
-            let baseGoldReward = Math.max(1, Math.round(currentHitSize * BASE_GOLD_PER_GRAM)); 
-
-            let bonusCoinReward = 0;
-            const coinDropChance = getCalculatedBonusCoinChance();
-            if (Math.random() < coinDropChance) {
-                bonusCoinReward = getCalculatedBonusCoinAmount();
-                if (isDoubleHit) {
-                    bonusCoinReward *= 2; 
-                }
-                if(coinSynth) coinSynth.triggerAttackRelease("G5", "16n", now + 0.1);
-            }
-            
-            const totalGoldGained = baseGoldReward + bonusCoinReward;
-            
-            const xpGained = Math.round(currentHitSize * 10 * gameState.currentLevel / 2);
-            
-
-            // --- 2. GAME STATE UPDATE ---
-            gameState.hits += 1;
-            gameState.gramsSmoked = parseFloat((gameState.gramsSmoked + currentHitSize).toFixed(2));
-            gameState.goldCoins += totalGoldGained;
-            
-            gameState.goldEarnedTotal += totalGoldGained;
-            gameState.biggestHit = Math.max(gameState.biggestHit, currentHitSize);
-            gameState.xp += xpGained;
-            checkLevelUp(); // This updates level/xp in state
-            checkAchievements(); // NEW: Check achievements after every hit
-            
-
-            // --- 3. VISUALS & SFX (Inhale) ---
-            eedsCharacter.classList.add('smoking');
-            if (clickSynth) clickSynth.triggerAttackRelease("C3", "32n", now);
-            if (bubbleSynth) bubbleSynth.triggerAttackRelease("1n", now + 0.05); 
-            
-            const puff = document.createElement('div');
-            puff.classList.add('smoke-puff');
-            const gameArea = document.querySelector('#minigameView .weed-game-bg');
-            if (gameArea) gameArea.appendChild(puff); 
-
-            // --- 4. Hit Message Display ---
-            const message = document.createElement('div');
-            let messageText = `💨 ${currentHitSize.toFixed(1)}g rip!`;
-            if (isDoubleHit) {
-                messageText = `🔥 DOUBLE HIT! ${currentHitSize.toFixed(1)}g!`;
-            }
-            messageText += ` (+${xpGained} XP)`;
-            
-            if (totalGoldGained > 0) {
-                 messageText += ` (+${totalGoldGained} 💰)`;
-            }
-            
-            message.textContent = messageText;
-
-            message.classList.add('hit-message', 'text-xl', 'font-bold', 'readable-text-shadow');
-            message.classList.add(isDoubleHit ? 'text-red-400' : 'text-emerald-400');
-            message.style.animation = 'fade-up-left 1.5s ease-out forwards'; 
-            minigameView.appendChild(message);
-
-            // --- 5. SCHEDULE EXHALE ANIMATION, CLEANUP & SAVE ---
-            setTimeout(() => {
-                const exhalePuff = document.createElement('div');
-                exhalePuff.classList.add('smoke-exhale');
-                if (gameArea) gameArea.appendChild(exhalePuff); 
-                
-                setTimeout(() => {
-                    if (exhalePuff.parentElement) exhalePuff.remove();
-                }, 1500); 
-
-            }, smokeDelay); 
-
-            setTimeout(() => {
-                try {
-                    eedsCharacter.classList.remove('smoking');
-                    if (puff.parentElement) puff.remove(); 
-                    if (message.parentElement) message.remove();
-                    
-                    saveGameState();
-                    updateUI();
-                } catch (e) {
-                    console.error("Game cleanup failed, but cooldown is forced to reset.", e);
-                } finally {
-                    isSmoking = false; 
-                }
-            }, smokeDelay); 
+            // After purchase, re-render shop and update all UI
+            checkForAchievements();
+            renderShop();
+            updateUI();
         }
-        
-        // --- VIEW MANAGEMENT & INITIAL SETUP ---
-        function showView(viewId) {
-            infoView.classList.add('hidden');
-            testView.classList.add('hidden');
-            minigameView.classList.add('hidden');
-            shopView.classList.add('hidden');
-            achievementsView.classList.add('hidden'); // NEW
 
-            // Toggle visibility of the connection status based on the active view
-            if (viewId === 'minigameView') {
+        // --- UI UPDATES (Same as previous) ---
+
+        function updateUI() {
+            if (!isAuthReady) {
+                loadingStatus.textContent = connectionMessage || 'Initializing game...';
                 loadingStatus.classList.remove('hidden');
+                return;
             } else {
                 loadingStatus.classList.add('hidden');
             }
 
-            document.querySelectorAll('.nav-button').forEach(btn => {
-                // Reset all to default green style
-                btn.style.setProperty('background-image', 'linear-gradient(to right, #10b981, #059669)', 'important');
-                btn.classList.remove('!bg-fuchsia-600', 'hover:!bg-fuchsia-700', '!shadow-fuchsia-500/50');
-                btn.classList.remove('!bg-yellow-500', 'hover:!bg-yellow-600', '!shadow-yellow-500/50');
-                btn.classList.remove('!bg-blue-500', 'hover:!bg-blue-600', '!shadow-blue-500/50'); // Reset blue
-            });
+            // Update Counters
+            hitCounterDisplay.textContent = `Hits: ${gameState.hits.toLocaleString()}`;
+            gramCounterDisplay.textContent = `Grams Smoked: ${gameState.gramsSmoked.toFixed(1)}g`;
+            coinCounterDisplay.textContent = `Coins: ${gameState.goldCoins.toLocaleString()} 💰`;
             
-            const buttonMap = {
-                'navInfoButton': document.getElementById('navInfoButton'),
-                'navMinigameButton': document.getElementById('navMinigameButton'),
-                'navShopButton': document.getElementById('navShopButton'),
-                'navAchievementsButton': document.getElementById('navAchievementsButton')
-            };
+            // Update Level/XP bar
+            const xpNeeded = getXPForNextLevel(gameState.currentLevel);
+            const xpProgress = gameState.xp;
+            const percentage = Math.min(100, (xpProgress / xpNeeded) * 100);
 
-            // Set active button styles
+            levelDisplay.textContent = `LEVEL ${gameState.currentLevel}`;
+            xpDisplay.textContent = `${Math.round(xpProgress)} / ${xpNeeded} XP`;
+            levelBar.style.width = `${percentage}%`;
+
+            // STATS CARD UPDATES
+            currentLevelStat.textContent = gameState.currentLevel.toLocaleString();
+            statHitsTaken.textContent = gameState.hits.toLocaleString();
+            statGoldEarned.textContent = gameState.goldEarnedTotal.toLocaleString();
+            statBiggestHit.textContent = gameState.biggestHit.toFixed(1);
+            statXpToNext.textContent = (xpNeeded - Math.round(xpProgress)).toLocaleString();
+
+            const dirtinessPenalty = (gameState.bongDirtiness + gameState.bongWaterDirtiness) * DIRTINESS_PENALTY_PER_UNIT;
+            
+            // Update Bong Resin Dirtiness
+            statDirtiness.textContent = `${Math.round(dirtinessPenalty * 100)}%`;
+            dirtOverlay.style.opacity = (gameState.bongDirtiness / MAX_DIRTINESS).toFixed(2);
+            
+            // Update Water Dirtiness
+            statWaterDirt.textContent = `${gameState.bongWaterDirtiness} / ${MAX_WATER_DIRTINESS}`;
+            waterDirtOverlay.style.opacity = (gameState.bongWaterDirtiness / MAX_WATER_DIRTINESS).toFixed(2);
+            
+            changeWaterButton.disabled = gameState.goldCoins < WATER_CHANGE_COST || gameState.bongWaterDirtiness === 0;
+
+            // Update Rank
+            if (statRank) {
+                statRank.textContent = getCurrentRank();
+            }
+            
+            // Refill indicator check
+            if (gameState.hitsSinceRefill >= MAX_HITS_PER_BOWL) {
+                weedStash.style.fill = '#ff6347'; // Temporarily change to a "needs refill" color
+            } else {
+                weedStash.style.fill = '#10b981'; // Normal weed color
+            }
+
+            // Update Bong Style if Golden Bong is owned
+            if (gameState.hasGoldenBong) {
+                cosmicBong.classList.add('golden-bong');
+            } else {
+                cosmicBong.classList.remove('golden-bong');
+            }
+
+            // Save state after all updates
+            saveGameState();
+        }
+
+        // --- NAVIGATION & INFO (Same as previous) ---
+
+        function showView(viewId) {
+            // Hide all views
+            infoView.classList.add('hidden');
+            testView.classList.add('hidden');
+            minigameView.classList.add('hidden');
+            shopView.classList.add('hidden');
+            achievementsView.classList.add('hidden');
+            
+            // Show the requested view
+            document.getElementById(viewId).classList.remove('hidden');
+
+            // Handle view-specific updates/renders
             if (viewId === 'minigameView') {
-                buttonMap['navMinigameButton'].classList.add('!bg-fuchsia-600', 'hover:!bg-fuchsia-700', '!shadow-fuchsia-500/50');
-                buttonMap['navMinigameButton'].style.setProperty('background-image', 'linear-gradient(to right, #a855f7, #9333ea)', 'important');
-                minigameView.classList.remove('hidden');
+                updateUI();
             } else if (viewId === 'shopView') {
-                buttonMap['navShopButton'].classList.add('!bg-yellow-500', 'hover:!bg-yellow-600', '!shadow-yellow-500/50');
-                buttonMap['navShopButton'].style.removeProperty('background-image');
-                shopView.classList.remove('hidden');
-                renderShop(); 
-            } else if (viewId === 'achievementsView') { // NEW view
-                buttonMap['navAchievementsButton'].classList.add('!bg-blue-500', 'hover:!bg-blue-600', '!shadow-blue-500/50');
-                buttonMap['navAchievementsButton'].style.setProperty('background-image', 'linear-gradient(to right, #3b82f6, #2563eb)', 'important');
-                achievementsView.classList.remove('hidden');
+                renderShop();
+            } else if (viewId === 'achievementsView') {
                 renderAchievements();
-            } else { // infoView
-                 buttonMap['navInfoButton'].classList.add('!bg-fuchsia-600', 'hover:!bg-fuchsia-700', '!shadow-fuchsia-500/50');
-                 buttonMap['navInfoButton'].style.setProperty('background-image', 'linear-gradient(to right, #a855f7, #9333ea)', 'important');
-                 infoView.classList.remove('hidden');
             }
         }
 
-        document.querySelectorAll('.fact-button[data-fact]').forEach(button => {
-            button.addEventListener('click', (event) => {
-                const factKey = event.target.getAttribute('data-fact');
-                factDisplay.innerHTML = `<p>${FACTS[factKey]}</p>`;
-            });
-        });
+        function handleFactButtonClick(event) {
+            const factKey = event.target.getAttribute('data-fact');
+            if (FACTS[factKey]) {
+                factDisplay.innerHTML = `<p class="text-white readable-text-shadow">${FACTS[factKey]}</p>`;
+            }
+        }
+
+        // --- INITIALIZATION (Same as previous) ---
         
         window.addEventListener('load', async () => {
             initSynths();
             await initFirebase();
             showView('infoView'); 
             
+            // Start the swaying animation immediately
+            if (eedsCharacter) {
+                eedsCharacter.classList.add('swaying');
+            }
+
             // Event listener for "Begin Test" button to switch to the minigame view
             document.getElementById('beginTestButton').addEventListener('click', () => {
                 showView('minigameView');
@@ -1272,11 +1483,22 @@
             document.getElementById('navInfoButton').addEventListener('click', () => showView('infoView'));
             document.getElementById('navMinigameButton').addEventListener('click', () => showView('minigameView'));
             document.getElementById('navShopButton').addEventListener('click', () => showView('shopView'));
-            document.getElementById('navAchievementsButton').addEventListener('click', () => showView('achievementsView')); // NEW
+            document.getElementById('navAchievementsButton').addEventListener('click', () => showView('achievementsView')); 
+            
+            // Add event listeners for fact buttons
+            document.querySelectorAll('.fact-button[data-fact]').forEach(button => {
+                button.addEventListener('click', handleFactButtonClick);
+            });
+
 
             // Re-attach click listener for eedsCharacter 
             if (eedsCharacter) {
                 eedsCharacter.addEventListener('click', triggerBongHit);
+            }
+
+            // Add listener for the change water button
+            if (changeWaterButton) {
+                changeWaterButton.addEventListener('click', changeBongWater);
             }
         });
     </script>
