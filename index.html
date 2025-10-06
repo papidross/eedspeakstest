@@ -238,60 +238,160 @@
 
         let finalResultText = ""; // Global variable to store the calculated result temporarily
 
-        // --- Tone.js Music Setup ---
-        let musicLoop = null;
-        let synth = null;
+        // --- Tone.js Music Setup (Classic Hip Hop Beat - Boom Bap) ---
+        let kickSynth = null;
+        let snareSynth = null;
+        let hiHatSynth = null;
+        let bassSynth = null;
+        let melodySynth = null;
+        let whisperSynth = null;
         let isAudioInitialized = false;
+        
+        // Arrays to hold Tone.js sequences/loops so they can be stopped/disposed
+        let sequences = []; 
 
         function startMusic() {
             if (isAudioInitialized) return;
 
             // 1. Start the Tone.js audio context (requires user gesture)
             Tone.start();
+            Tone.Transport.bpm.value = 88; // Classic Hip Hop BPM (88-95)
+            
+            // Set master volume
+            Tone.Destination.volume.value = -8; 
+            
+            // Use a slight swing
+            Tone.Transport.swing = 0.05; 
+            Tone.Transport.swingSubdivision = "8n";
 
-            // 2. Create the synth with a chill tone (PolySynth for chords)
-            synth = new Tone.PolySynth(Tone.Synth, {
-                oscillator: { type: "triangle" }, // Smooth waveform
-                envelope: {
-                    attack: 1, // Slow attack
-                    decay: 0.5,
-                    sustain: 0.5,
-                    release: 2,
-                }
+            // 2. Setup Synths
+            
+            // Kick (MembraneSynth for a punchy low-end)
+            kickSynth = new Tone.MembraneSynth({
+                pitchDecay: 0.02,
+                octaves: 5,
+                envelope: { attack: 0.005, decay: 0.4, sustain: 0, release: 0.2 },
+            }).toDestination();
+            
+            // Snare (NoiseSynth with Brown noise for a fatter sound)
+            snareSynth = new Tone.NoiseSynth({
+                noise: { type: "brown" },
+                envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.05 }
+            }).toDestination();
+            snareSynth.volume.value = -3;
+            
+            // Hi-Hat (Metal-like sound for open/closed hats, very subtle)
+            hiHatSynth = new Tone.MetalSynth({
+                envelope: { attack: 0.001, decay: 0.1, release: 0.1 },
+                harmonicity: 5.1,
+                modulationIndex: 32,
+                resonance: 4000,
+                octaves: 1.5
+            }).toDestination();
+            hiHatSynth.volume.value = -18;
+            
+            // Sampled-style Bass (MonoSynth with Triangle for warmth and LFO for movement)
+            bassSynth = new Tone.MonoSynth({
+                oscillator: { type: "triangle" },
+                envelope: { attack: 0.01, decay: 0.8, sustain: 0.9, release: 0.5 },
+                filterEnvelope: { octaves: 1, baseFrequency: 200, attack: 0.1, decay: 0.3 }
+            }).toDestination();
+            bassSynth.volume.value = -6; 
+            
+            // Soulful Melody/Sample Loop (Simple Synth with Reverb)
+            melodySynth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: "sine" },
+                envelope: { attack: 0.05, decay: 0.4, sustain: 0.6, release: 0.5 }
+            }).chain(new Tone.Freeverb({ roomSize: 0.5, wet: 0.2 }), Tone.Destination);
+            melodySynth.volume.value = -12; 
+            
+            // Whisper Synth (NoiseSynth + Reverb for simulation)
+            whisperSynth = new Tone.NoiseSynth({
+                noise: { type: "white" },
+                envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.05 }
             });
-            
-            // Add a touch of reverb for atmosphere
-            const reverb = new Tone.Reverb({ decay: 4, wet: 0.5 }).toDestination();
-            synth.connect(reverb);
-            
-            // Set master volume low
-            Tone.Destination.volume.value = -12;
+            const whisperReverb = new Tone.Reverb({ decay: 5, wet: 0.6 }).toDestination();
+            whisperSynth.chain(whisperReverb, Tone.Destination);
+            whisperSynth.volume.value = -18; // Subtler whisper for the smooth vibe
 
-            // 3. Define the chill chord progression (Cmaj7, Am7, Dm7, G7)
-            const chords = [
-                ["C4", "E4", "G4", "B4"], // C Major 7
-                ["A3", "C4", "E4", "G4"], // A minor 7
-                ["D4", "F4", "A4", "C5"], // D minor 7
-                ["G3", "B3", "D4", "F4"], // G 7
+            // 3. Define Patterns (Sequences)
+            
+            // Drum Pattern (Boom Bap: Kick on 1 and 3, Snare on 2 and 4)
+            // FIX: Changed pattern to single note strings and updated callback logic to avoid "notes.forEach is not a function" error.
+            const drumPattern = [
+                "C1",   // Kick on 1
+                "D1",   // Snare on 2
+                "C1",   // Kick on 3
+                "D1"    // Snare on 4
             ];
+            sequences.push(new Tone.Sequence((time, note) => {
+                if (note === "C1") kickSynth.triggerAttackRelease("C1", "8n", time, 1);
+                else if (note === "D1") snareSynth.triggerAttackRelease("8n", time, 0.8);
+            }, drumPattern, "4n").start(0));
+            
+            // Hi-Hat Loop (Subtle swing on 8th notes)
+            sequences.push(new Tone.Loop(time => {
+                hiHatSynth.triggerAttackRelease("32n", time, 0.3);
+            }, "8n").start(0));
 
-            // 4. Create the looping sequence
-            let currentChordIndex = 0;
-            musicLoop = new Tone.Loop(time => {
-                const chord = chords[currentChordIndex % chords.length];
-                synth.triggerAttackRelease(chord, "2n", time, 0.5); // Play for half note duration
-                currentChordIndex++;
-            }, "2n").start(0); 
+            // Bassline (Walking bass, simple C minor scale)
+            const bassline = ["C1", null, "Eb1", null, "G0", null, "F1", null];
+            sequences.push(new Tone.Sequence((time, note) => {
+                if (note) {
+                    bassSynth.triggerAttackRelease(note, "4n", time, 0.9);
+                }
+            }, bassline, "4n").start(0));
+            
+            // Melody Loop (Simple, 2-bar jazz chord progression simulation)
+            const melody = [
+                ["C4", "Eb4"], // C minor 
+                null,
+                ["F4", "G4"], // F minor 
+                null,
+                ["Ab4", "G4"], // Ab major
+                null,
+                ["G4", "F4"], // G major
+                null
+            ];
+            sequences.push(new Tone.Sequence((time, chord) => {
+                if (chord) {
+                    melodySynth.triggerAttackRelease(chord, "4n", time, 0.5);
+                }
+            }, melody, "4n").start(0));
 
-            Tone.Transport.bpm.value = 60; // Slow, chill BPM
+            // Whisper Sequence: "20 grams" on beat 1 of every 4th measure
+            sequences.push(new Tone.Sequence((time) => {
+                // Whisper timing simulation: "Twen-" (short noise)
+                whisperSynth.triggerAttackRelease("32n", time + 0); 
+                // "-ty" (short noise)
+                whisperSynth.triggerAttackRelease("32n", time + Tone.Time("8n").toSeconds()); 
+                // "Grams" (longer noise/breath sound)
+                whisperSynth.triggerAttackRelease("8n", time + Tone.Time("4n").toSeconds()); 
+            }, ["0"], "4m").start(0)); // Trigger once every 4 measures on beat 1
+
             Tone.Transport.start();
             isAudioInitialized = true;
         }
 
         function stopMusic() {
-            if (musicLoop) {
-                musicLoop.stop();
+            if (Tone.Transport.state === 'started') {
+                Tone.Transport.stop();
             }
+            // Dispose of all synths and sequences
+            sequences.forEach(s => s.dispose());
+            sequences = []; // Clear the array
+            
+            if (kickSynth) kickSynth.dispose();
+            if (snareSynth) snareSynth.dispose();
+            if (hiHatSynth) hiHatSynth.dispose();
+            if (bassSynth) bassSynth.dispose();
+            if (melodySynth) melodySynth.dispose();
+            if (whisperSynth) whisperSynth.dispose();
+            
+            // Re-initialize synths to null after disposal
+            kickSynth = snareSynth = hiHatSynth = bassSynth = melodySynth = whisperSynth = null;
+            
+            isAudioInitialized = false;
         }
         
         // --- View Management ---
