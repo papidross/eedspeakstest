@@ -315,8 +315,7 @@
         
         // =========================================================================
         // !!! FIX REQUIRED: PASTE YOUR FIREBASE CONFIG HERE !!!
-        // Get this config object from your Firebase Console -> Project Settings -> Web App
-        // This MUST be public-facing, client-side configuration.
+        // If these keys are incorrect or missing, the app will run in offline mode.
         // =========================================================================
         const USER_FIREBASE_CONFIG = {
             apiKey: "AIzaSyD8RzspQnRmBvj037H5DTuwM6MDdhl3Uj8", // <--- CHECK THIS LINE
@@ -325,7 +324,6 @@
             storageBucket: "eeds-smoke-game.firebasestorage.app", // <--- CHECK THIS LINE
             messagingSenderId: "62527063655", // <--- CHECK THIS LINE
             appId: "1:62527063655:web:a06d54bbbe02ef5a78f6c2" // <--- CHECK THIS LINE
-            measurementId: "G-LKJNV0W1QF"
         };
         // =========================================================================
         
@@ -350,7 +348,7 @@
             { id: 'speed_boost', name: 'Fast Lighter', desc: 'Reduces Hit Delay by -10%', baseCost: 100, gramBoost: 0, speedBoost: 0.1, maxPurchases: 5, icon: '⚡' },
         ];
 
-        // --- DOM ELEMENTS (omitted for brevity) ---
+        // --- DOM ELEMENTS ---
         const infoView = document.getElementById('infoView');
         const testView = document.getElementById('testView');
         const minigameView = document.getElementById('minigameView');
@@ -376,7 +374,7 @@
         
         // --- FIREBASE VARIABLES ---
         let db, auth, userId = null;
-        let isAuthReady = false;
+        let isAuthReady = false; // Flag to check if we can safely read/write or at least run the game
         let isSmoking = false;
 
         // --- AUDIO/TONE.JS SETUP (Minimal for SFX) ---
@@ -386,7 +384,12 @@
         
         function initSynths() {
             if (clickSynth) return;
-            Tone.start();
+            // Only start audio if a user interaction has occurred
+            document.body.addEventListener('click', () => {
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+            }, { once: true });
 
             clickSynth = new Tone.MembraneSynth({ pitchDecay: 0.01, octaves: 2, envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.01 } }).toDestination();
             clickSynth.volume.value = -5;
@@ -408,7 +411,7 @@
             coinSynth.volume.value = -10;
         }
 
-        // --- FIREBASE INITIALIZATION & AUTH (FIXED) ---
+        // --- FIREBASE INITIALIZATION & AUTH (FIXED with Offline Fallback) ---
 
         async function initFirebase() {
             try {
@@ -421,62 +424,71 @@
                 
                 setLogLevel('Debug');
 
-                // FIX: Use the user-provided config or fall back to an empty object
+                // Use the user-provided config or fall back to an empty object
                 const firebaseConfig = USER_FIREBASE_CONFIG.projectId ? USER_FIREBASE_CONFIG : (typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {});
                 
                 if (!firebaseConfig.projectId) {
-                    loadingStatus.textContent = 'Configuration Error: Please paste your Firebase keys into the USER_FIREBASE_CONFIG object in the code.';
-                    loadingStatus.classList.add('bg-red-600/50', 'text-red-200');
-                    loadingStatus.classList.remove('bg-black/50');
-                    return;
+                    // FALLBACK 1: Missing Config
+                    loadingStatus.textContent = 'Warning: Firebase config missing. App is running offline. Progress will NOT save.';
+                    loadingStatus.classList.add('bg-yellow-600/50', 'text-yellow-200');
+                    loadingStatus.classList.remove('bg-black/50', 'bg-red-600/50');
+                    isAuthReady = true; // Enable game execution
+                    return; // Exit here
                 }
 
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
                 
-                // FIX: Removed signInWithCustomToken check, now always use Anonymous Sign-In
+                // Attempt to sign in anonymously
                 await signInAnonymously(auth);
 
-                // Wait for auth state to change
+                // Listen for auth state change
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
                         isAuthReady = true;
-                        loadingStatus.textContent = `Connected! User ID: ${userId.substring(0, 8)}...`;
+                        loadingStatus.textContent = `Connected! User ID: ${userId.substring(0, 8)}... (Progress is SAVED)`;
                         loadingStatus.classList.add('bg-emerald-600/50', 'text-emerald-200');
                         loadingStatus.classList.remove('bg-black/50', 'bg-red-600/50');
                         
                         listenToGameData();
                     } else {
-                        // This indicates a critical failure in anonymous sign-in
-                        loadingStatus.textContent = 'Authentication failed. Data will not be saved.';
-                        loadingStatus.classList.add('bg-red-600/50', 'text-red-200');
-                        loadingStatus.classList.remove('bg-black/50');
+                         // Should not happen if signInAnonymously succeeds, but handle potential logout/critical issue
+                        console.error("Authentication failed after initial sign-in attempt.");
+                        loadingStatus.textContent = 'Auth Failed. Running offline (Progress will NOT save).';
+                        loadingStatus.classList.add('bg-yellow-600/50', 'text-yellow-200');
+                        loadingStatus.classList.remove('bg-black/50', 'bg-red-600/50');
+                        isAuthReady = true; // Still enable game for offline play
                     }
                 });
 
             } catch (error) {
-                console.error("Firebase Initialization Error:", error);
-                loadingStatus.textContent = `Connection Error: ${error.message}`;
-                loadingStatus.classList.add('bg-red-600/50', 'text-red-200');
-                loadingStatus.classList.remove('bg-black/50');
+                // FALLBACK 2: API Key/Auth Failure
+                console.error("Firebase Initialization Error (Falling back to offline mode):", error);
+                loadingStatus.textContent = `Warning: Connection failed (${error.code || 'API Key Error'}). App is running offline. Progress will NOT save.`;
+                loadingStatus.classList.add('bg-yellow-600/50', 'text-yellow-200');
+                loadingStatus.classList.remove('bg-black/50', 'bg-red-600/50');
+                isAuthReady = true; // CRITICAL: Enable game buttons in offline mode
+            } finally {
+                // Ensure the UI updates and the game view is shown after the attempt finishes
+                showView('minigameView');
+                updateUI();
             }
         }
 
         // --- FIRESTORE DATA HANDLING ---
         
         function getGameDataRef() {
-            // FIX: Use a static App ID for public deployment since __app_id is unavailable
+            // Use the Project ID for the app ID since __app_id is unavailable
             const appId = USER_FIREBASE_CONFIG.projectId || 'github-smoke-shop'; 
-            // Private data path: /artifacts/{appId}/users/{userId}/game_data/eedspeaks_profile
-            // Note: Firebase Security Rules on your project MUST allow read/write for auth.uid in this path.
             return window.firebase.doc(db, 'artifacts', appId, 'users', userId, 'game_data', 'eedspeaks_profile');
         }
 
         async function saveGameState() {
+            // Only save if we are authenticated and ready
             if (!isAuthReady || !db || !userId) {
-                console.warn("Attempted to save state before auth was ready/db was initialized.");
+                // console.warn("Attempted to save state before auth was ready/db was initialized.");
                 return;
             }
             try {
@@ -501,6 +513,7 @@
                 if (docSnapshot.exists()) {
                     const data = docSnapshot.data();
                     gameState = {
+                        // Ensure numerical fields are parsed correctly
                         hits: data.hits || 0,
                         gramsSmoked: parseFloat(data.gramsSmoked) || 0.0,
                         goldCoins: data.goldCoins || 0,
@@ -509,6 +522,7 @@
                         hasWon: data.hasWon || false
                     };
                 } else {
+                    // If document doesn't exist, create it with current local state
                     saveGameState();
                 }
                 updateUI();
@@ -518,7 +532,7 @@
             });
         }
         
-        // --- REST OF THE GAME LOGIC (omitted for brevity, assume it's here) ---
+        // --- GAME LOGIC ---
         function updateUI() {
             hitCounterDisplay.textContent = `Hits: ${gameState.hits}`;
             gramCounterDisplay.textContent = `Grams Smoked: ${gameState.gramsSmoked.toFixed(1)}g`;
@@ -545,7 +559,7 @@
         }
 
         function renderShop() {
-            if (shopItemsContainer.classList.contains('hidden')) return; 
+            if (shopView.classList.contains('hidden')) return; 
 
             shopItemsContainer.innerHTML = ''; // Clear previous items
 
@@ -683,23 +697,23 @@
             }, smokeDelay); 
         }
         
-        // --- VIEW MANAGEMENT & INITIAL SETUP (omitted for brevity, assume it's here) ---
+        // --- VIEW MANAGEMENT & INITIAL SETUP ---
         function showView(viewId) {
             infoView.classList.add('hidden');
             testView.classList.add('hidden');
             minigameView.classList.add('hidden');
             shopView.classList.add('hidden');
             
-            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('bg-purple-600', 'shadow-lg'));
+            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('bg-fuchsia-600', 'shadow-lg', '!bg-yellow-500'));
             
             if (viewId === 'infoView') {
-                document.getElementById('navInfoButton').classList.add('bg-purple-600', 'shadow-lg');
+                document.getElementById('navInfoButton').classList.add('bg-fuchsia-600', 'shadow-lg');
                 infoView.classList.remove('hidden');
             } else if (viewId === 'minigameView') {
-                document.getElementById('navMinigameButton').classList.add('bg-purple-600', 'shadow-lg');
+                document.getElementById('navMinigameButton').classList.add('!bg-fuchsia-600', 'shadow-lg');
                 minigameView.classList.remove('hidden');
             } else if (viewId === 'shopView') {
-                document.getElementById('navShopButton').classList.add('bg-purple-600', 'shadow-lg');
+                document.getElementById('navShopButton').classList.add('!bg-yellow-500', 'shadow-lg');
                 shopView.classList.remove('hidden');
                 renderShop(); 
             }
@@ -728,7 +742,7 @@
         window.addEventListener('load', async () => {
             initSynths();
             await initFirebase();
-            showView('minigameView');
+            // The view is now shown in initFirebase/finally block for guaranteed display.
         });
     </script>
 </body>
