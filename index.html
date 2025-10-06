@@ -11,8 +11,7 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0f172a; /* Dark background base */
-            background-image: radial-gradient(circle at 50% 100%, #1e293b 0%, #0f172a 70%); /* Smoky gradient */
+            background-color: #0f172a; /* Solid dark background base only */
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -20,13 +19,16 @@
             padding: 20px;
         }
         .container {
-            background-color: #26333e; /* Darker card, slightly blue/gray */
+            /* Increased opacity for better visibility over the new background */
+            background-color: rgba(38, 51, 62, 0.95); /* Slightly transparent dark card */
             border-radius: 16px;
             padding: 32px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); /* Stronger shadow */
             max-width: 800px;
             width: 100%;
             border: 1px solid #334155;
+            position: relative; 
+            z-index: 10; /* Ensure container is above the background */
         }
         /* Subtle text glow for the main title */
         .glow-text {
@@ -40,10 +42,9 @@
             width: 80vmin; /* Responsive size */
             height: 80vmin;
             transform: translate(-50%, -50%) rotate(25deg);
-            /* Increased opacity from 0.05 to 0.2 for visibility */
-            opacity: 0.2; 
+            opacity: 0.1; /* Reduced opacity to be less distracting against the new photo background */
             filter: drop-shadow(0 0 15px #059669); /* Soft green glow effect */
-            z-index: -1; /* Ensure it stays behind all content */
+            z-index: -1; /* Ensure it stays behind all content but above the main photo background */
             pointer-events: none; /* Make sure it doesn't interfere with clicks */
         }
         /* Style for the regular fact buttons (Emerald Green - Cannabis color) */
@@ -111,16 +112,50 @@
             border-radius: 12px;
             margin-bottom: 16px;
         }
+        /* Image Loading effect for the small corner images */
+        .decor-img {
+            transition: opacity 0.5s ease-in-out;
+            opacity: 0;
+        }
+        .image-loaded {
+            opacity: 0.9;
+        }
+        /* Style for the new full-screen background */
+        #cannabis-bg-overlay {
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+        }
     </style>
 </head>
 <body>
     
+    <!-- NEW FULL BACKGROUND ELEMENT -->
+    <div id="cannabis-bg-overlay" 
+         class="fixed inset-0 z-[-2] transition-opacity duration-1000 opacity-0" 
+         style="background-color: #0f172a;">
+        <!-- Dark overlay for better contrast and legibility -->
+        <div class="absolute inset-0 bg-black opacity-70"></div> 
+    </div>
+
     <!-- SVG for the Cannabis Leaf Icon (fixed background element) -->
     <svg id="cannabis-leaf" class="leaf-bg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M50 0 L40 20 L20 15 L35 40 L20 60 L50 90 L80 60 L65 40 L80 15 L60 20 Z" fill="#10b981"/>
     </svg>
 
     <div class="container">
+        
+        <!-- Decoration Cannabis Images (Generated via API) -->
+        <img id="bud-image"
+             src="https://placehold.co/128x128/94a3b8/0f172a?text=LOADING" 
+             alt="High quality cannabis bud placeholder" 
+             class="absolute -top-6 -left-6 w-12 h-12 rounded-lg object-cover decor-img hidden sm:block transform rotate-12 shadow-lg ring-2 ring-emerald-500"/>
+             
+        <img id="plant-image"
+             src="https://placehold.co/128x128/94a3b8/0f172a?text=LOADING" 
+             alt="Cannabis plant detail placeholder" 
+             class="absolute -top-6 -right-6 w-12 h-12 rounded-lg object-cover decor-img hidden sm:block transform -rotate-12 shadow-lg ring-2 ring-emerald-500"/>
+        
         <h1 class="text-4xl sm:text-5xl font-extrabold text-white mb-4 tracking-wider text-center glow-text">
             EEDSPEAKS <span class="text-emerald-400">Smoke Test</span>
         </h1>
@@ -207,6 +242,23 @@
                 <button id="restartButton" class="fact-button hidden">Restart Test</button>
             </div>
         </div>
+        
+        <!-- Wiz Khalifa Tribute Section (NEW) -->
+        <div class="mt-10 pt-6 border-t border-slate-700 text-center">
+            <p class="text-slate-400 mb-4 text-sm uppercase tracking-widest">
+                The Inspiration
+            </p>
+            <div class="w-32 h-32 mx-auto rounded-full overflow-hidden shadow-xl ring-4 ring-emerald-400/50">
+                <!-- Wiz Khalifa Placeholder Image (Uses a purple theme to match CTA buttons) -->
+                <img src="https://placehold.co/128x128/9333ea/ffffff?text=Wiz+Khalifa" 
+                     alt="Wiz Khalifa, the inspiration for this test" 
+                     class="object-cover w-full h-full transform transition duration-500 hover:scale-110"/>
+            </div>
+            <p class="text-xl font-bold text-white mt-2">
+                Taylor Gang Or Die
+            </p>
+        </div>
+        
     </div>
 
     <script>
@@ -215,13 +267,13 @@
             // Updated text for "How does it work?"
             mission: "Simply click on the Begin Test button, and take a test to find out the true amount of Cannabis Eedspeaks smoked in a week.",
             // Updated text for "Is it fake?"
-            founding: "Everything shown on the website is correct information obtained after years of regular investigation.",
+            founding: "Everything shown on the website is correct information obtained after years of years of regular investigation.",
             // UPDATED: New Bong or Joint fact with 'Fun Fact' embedded
             product: "Eedspeaks usually only smokes from a Bong, but he isn't against a well-rolled L joint. <br><br><strong>Fun Fact:</strong> Eeds can smoke an L joint in 5 minutes.",
             // UPDATED: Changed from 'Official Mascot' to 'Contact us'
             mascot: "For all inquiries, contact Eeds directly via his galactic communicator at **eedspeaks@cosmiccloud.net** or send a transmission through the nebula."
         };
-
+        
         const factDisplay = document.getElementById('factDisplay');
         const buttons = document.querySelectorAll('.fact-button');
         const beginTestButton = document.getElementById('beginTestButton');
@@ -317,7 +369,6 @@
             // 3. Define Patterns (Sequences)
             
             // Drum Pattern (Boom Bap: Kick on 1 and 3, Snare on 2 and 4)
-            // FIX: Changed pattern to single note strings and updated callback logic to avoid "notes.forEach is not a function" error.
             const drumPattern = [
                 "C1",   // Kick on 1
                 "D1",   // Snare on 2
@@ -509,6 +560,124 @@
             // Hide the form and show the confirmation view
             testForm.classList.add('hidden');
             confirmationView.classList.remove('hidden');
+        });
+
+
+        // --- Image Generation Logic (New) ---
+
+        // Helper for exponential backoff during API calls
+        async function fetchWithRetry(url, options, maxRetries = 5) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.ok) return response;
+                    if (response.status === 429 && i < maxRetries - 1) { // 429: Too Many Requests
+                        const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error;
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+        
+        // Function to generate an image using the Imagen API
+        // Added isBackground flag to handle setting background-image style property
+        async function generateAndDisplayImage(elementId, prompt, placeholderText, isBackground = false) {
+            const element = document.getElementById(elementId);
+            
+            // Set initial loading state
+            if (!isBackground) {
+                element.alt = "Loading " + placeholderText + "...";
+                element.classList.remove('image-loaded'); 
+            } else {
+                element.classList.remove('opacity-100'); 
+                element.classList.add('opacity-0'); 
+            }
+
+            const payload = { 
+                instances: { prompt: prompt }, 
+                parameters: { "sampleCount": 1 } 
+            };
+            const apiKey = ""; 
+            // Using imagen-3.0-generate-002 for high-quality, photorealistic generation
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+            try {
+                // Initial delay before the first attempt
+                await new Promise(resolve => setTimeout(resolve, 500)); 
+                
+                let response = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                    const base64Data = result.predictions[0].bytesBase64Encoded;
+                    const imageUrl = `data:image/png;base64,${base64Data}`;
+
+                    if (isBackground) {
+                        // For background element, set style property and fade in
+                        element.style.backgroundImage = `url('${imageUrl}')`;
+                        element.classList.remove('opacity-0');
+                        element.classList.add('opacity-100'); 
+                    } else {
+                        // For regular img elements, set src
+                        element.src = imageUrl;
+                        element.alt = placeholderText;
+                        // Wait for the image to fully load before applying the transition
+                        element.onload = () => {
+                            element.classList.add('image-loaded');
+                        };
+                    }
+                } else {
+                     // Fallback on failure
+                    console.error("Image generation failed:", result);
+                    if (!isBackground) {
+                        element.src = `https://placehold.co/128x128/b91c1c/ffffff?text=Image+Error`;
+                        element.alt = "Failed to load image (API returned no image).";
+                        element.classList.add('image-loaded');
+                    }
+                }
+            } catch (error) {
+                console.error("API call error:", error);
+                // Fallback on error
+                if (!isBackground) {
+                    element.src = `https://placehold.co/128x128/b91c1c/ffffff?text=API+Error`;
+                    element.alt = "Failed to load image (Network/API issue).";
+                    element.classList.add('image-loaded');
+                }
+            }
+        }
+
+        // Call the function on window load to generate and display the decorative images
+        window.addEventListener('load', () => {
+            // 1. Small corner bud image
+            generateAndDisplayImage(
+                'bud-image', 
+                'Extremely detailed, macro photograph of a glistening, vibrant green and purple cannabis nug with visible trichomes, high resolution, photorealistic.', 
+                'High Quality Cannabis Bud'
+            );
+            // 2. Small corner plant image
+            generateAndDisplayImage(
+                'plant-image', 
+                'Close-up photograph of a thriving cannabis plant in late flowering stage, showing large fan leaves and dense, frosty buds, natural sun lighting, photorealistic.', 
+                'Vibrant Cannabis Plant'
+            );
+            // 3. NEW Full Background Texture image
+            generateAndDisplayImage(
+                'cannabis-bg-overlay', 
+                'Ultra high-resolution, photorealistic, full-frame macro texture of cannabis bud surface, rich in trichomes, deep green and slight purple tones, used as a subtle background pattern.', 
+                'Full Background Cannabis Texture',
+                true // Indicate this is a background element
+            );
         });
 
         // Initialize view
