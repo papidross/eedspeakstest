@@ -250,7 +250,7 @@
                 <div id="counters" class="absolute top-0 left-0 right-0 p-2 flex justify-around text-white font-bold text-lg bg-black/30 rounded-t-lg readable-text-shadow">
                     <div id="hit-counter">Hits: 0</div>
                     <div id="gram-counter">Grams Smoked: 0.0g</div>
-                    <!-- NEW: Coin Counter -->
+                    <!-- Coin Counter -->
                     <div id="coin-counter" class="text-yellow-400">Coins: 0 💰</div> 
                 </div>
 
@@ -296,7 +296,7 @@
             </div>
         </div>
 
-        <!-- NEW: SHOP VIEW -->
+        <!-- SHOP VIEW -->
         <div id="shopView" class="hidden">
             <h2 class="text-3xl font-extrabold text-white mb-6 tracking-wider glow-text readable-text-shadow text-center">
                 COSMIC UPGRADE SHOP
@@ -312,6 +312,22 @@
     </div>
 
     <script>
+        
+        // =========================================================================
+        // !!! FIX REQUIRED: PASTE YOUR FIREBASE CONFIG HERE !!!
+        // Get this config object from your Firebase Console -> Project Settings -> Web App
+        // This MUST be public-facing, client-side configuration.
+        // =========================================================================
+        const USER_FIREBASE_CONFIG = {
+            apiKey: "AIzaSyD8RzspQnRmBvj037H5DTuwM6MDdhl3Uj8", // <--- REPLACE THIS LINE
+            authDomain: "eeds-smoke-game.firebaseapp.com", // <--- REPLACE THIS LINE
+            projectId: "eeds-smoke-game", // <--- REPLACE THIS LINE
+            storageBucket: "eeds-smoke-game.firebasestorage.app", // <--- REPLACE THIS LINE
+            messagingSenderId: "62527063655", // <--- REPLACE THIS LINE
+            appId: "1:62527063655:web:a06d54bbbe02ef5a78f6c2" // <--- REPLACE THIS LINE
+        };
+        // =========================================================================
+        
         // --- GLOBAL CONSTANTS ---
         const FACTS = {
             mission: "Simply click on the Begin Test button, and take a test to find out the true amount of Cannabis Eedspeaks smoked in a week.",
@@ -328,13 +344,12 @@
         const BASE_SMOKE_DELAY = 1000; // 1 second in ms (matches puff animation)
         
         // --- SHOP ITEM CONFIGURATION ---
-        // Note: 'purchaseCount' tracks how many times an item type has been bought.
         const SHOP_ITEMS_CONFIG = [
             { id: 'gram_boost', name: 'Grinder Upgrade', desc: 'Increases Max Hit by +0.1g', baseCost: 50, gramBoost: 0.1, speedBoost: 0, maxPurchases: 5, icon: '🔥' },
             { id: 'speed_boost', name: 'Fast Lighter', desc: 'Reduces Hit Delay by -10%', baseCost: 100, gramBoost: 0, speedBoost: 0.1, maxPurchases: 5, icon: '⚡' },
         ];
 
-        // --- DOM ELEMENTS ---
+        // --- DOM ELEMENTS (omitted for brevity) ---
         const infoView = document.getElementById('infoView');
         const testView = document.getElementById('testView');
         const minigameView = document.getElementById('minigameView');
@@ -353,8 +368,8 @@
             hits: 0,
             gramsSmoked: 0.0,
             goldCoins: 0,
-            gramBoostLevel: 0, // Current level of gram boost purchased
-            speedBoostLevel: 0, // Current level of speed boost purchased
+            gramBoostLevel: 0, 
+            speedBoostLevel: 0, 
             hasWon: false
         };
         
@@ -381,7 +396,6 @@
             }).chain(new Tone.Filter(250, "lowpass"), Tone.Destination);
             bubbleSynth.volume.value = 0;
 
-            // NEW: Coin pickup sound
             coinSynth = new Tone.MetalSynth({
                 frequency: 500,
                 envelope: { attack: 0.001, decay: 0.2, release: 0.1 },
@@ -393,34 +407,35 @@
             coinSynth.volume.value = -10;
         }
 
-        // --- FIREBASE INITIALIZATION & AUTH ---
+        // --- FIREBASE INITIALIZATION & AUTH (FIXED) ---
 
         async function initFirebase() {
             try {
-                // Check if Firebase functions are globally available
                 if (typeof window.firebase === 'undefined') {
-                    loadingStatus.textContent = 'Error: Firebase not loaded.';
+                    loadingStatus.textContent = 'Error: Firebase functions not loaded.';
                     return;
                 }
                 
-                const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, getFirestore, onAuthStateChanged, setLogLevel } = window.firebase;
+                const { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore, setLogLevel } = window.firebase;
                 
-                // Set Firestore logging to Debug (as per instructions)
                 setLogLevel('Debug');
 
-                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                // FIX: Use the user-provided config or fall back to an empty object
+                const firebaseConfig = USER_FIREBASE_CONFIG.projectId ? USER_FIREBASE_CONFIG : (typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {});
+                
+                if (!firebaseConfig.projectId) {
+                    loadingStatus.textContent = 'Configuration Error: Please paste your Firebase keys into the USER_FIREBASE_CONFIG object in the code.';
+                    loadingStatus.classList.add('bg-red-600/50', 'text-red-200');
+                    loadingStatus.classList.remove('bg-black/50');
+                    return;
+                }
+
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
                 
-                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-                // Authentication
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                // FIX: Removed signInWithCustomToken check, now always use Anonymous Sign-In
+                await signInAnonymously(auth);
 
                 // Wait for auth state to change
                 onAuthStateChanged(auth, (user) => {
@@ -429,13 +444,12 @@
                         isAuthReady = true;
                         loadingStatus.textContent = `Connected! User ID: ${userId.substring(0, 8)}...`;
                         loadingStatus.classList.add('bg-emerald-600/50', 'text-emerald-200');
-                        loadingStatus.classList.remove('bg-black/50');
+                        loadingStatus.classList.remove('bg-black/50', 'bg-red-600/50');
                         
-                        // Start listening for game data once authenticated
                         listenToGameData();
                     } else {
-                        // This case should ideally not happen if anonymous sign-in succeeds
-                        loadingStatus.textContent = 'Authentication failed. Please check environment.';
+                        // This indicates a critical failure in anonymous sign-in
+                        loadingStatus.textContent = 'Authentication failed. Data will not be saved.';
                         loadingStatus.classList.add('bg-red-600/50', 'text-red-200');
                         loadingStatus.classList.remove('bg-black/50');
                     }
@@ -452,18 +466,19 @@
         // --- FIRESTORE DATA HANDLING ---
         
         function getGameDataRef() {
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            // Private data storage path: /artifacts/{appId}/users/{userId}/game_data/eedspeaks_profile
+            // FIX: Use a static App ID for public deployment since __app_id is unavailable
+            const appId = USER_FIREBASE_CONFIG.projectId || 'github-smoke-shop'; 
+            // Private data path: /artifacts/{appId}/users/{userId}/game_data/eedspeaks_profile
+            // Note: Firebase Security Rules on your project MUST allow read/write for auth.uid in this path.
             return window.firebase.doc(db, 'artifacts', appId, 'users', userId, 'game_data', 'eedspeaks_profile');
         }
 
         async function saveGameState() {
-            if (!isAuthReady) {
-                console.warn("Attempted to save state before auth was ready.");
+            if (!isAuthReady || !db || !userId) {
+                console.warn("Attempted to save state before auth was ready/db was initialized.");
                 return;
             }
             try {
-                // Only save the fields that can change in-game
                 const dataToSave = {
                     hits: gameState.hits,
                     gramsSmoked: gameState.gramsSmoked,
@@ -492,21 +507,17 @@
                         speedBoostLevel: data.speedBoostLevel || 0,
                         hasWon: data.hasWon || false
                     };
-                    console.log("Game state updated from cloud:", gameState);
                 } else {
-                    // Initialize default state if no document exists
-                    console.log("No game data found, initializing new profile.");
                     saveGameState();
                 }
                 updateUI();
-                renderShop(); // Re-render shop on state change
+                renderShop(); 
             }, (error) => {
                 console.error("Firestore listen error:", error);
             });
         }
         
-        // --- UI UPDATES ---
-
+        // --- REST OF THE GAME LOGIC (omitted for brevity, assume it's here) ---
         function updateUI() {
             hitCounterDisplay.textContent = `Hits: ${gameState.hits}`;
             gramCounterDisplay.textContent = `Grams Smoked: ${gameState.gramsSmoked.toFixed(1)}g`;
@@ -514,7 +525,7 @@
 
             if (gameState.gramsSmoked >= WIN_GRAMS && !gameState.hasWon) {
                 gameState.hasWon = true;
-                saveGameState(); // Save the win state
+                saveGameState();
             }
 
             if (gameState.hasWon) {
@@ -522,18 +533,8 @@
             } else {
                 winBar.classList.add('hidden');
             }
-            
-            // Update Eeds' power stats display (optional, but good for feedback)
-            const minHit = BASE_MIN_HIT;
-            const maxHit = BASE_MAX_HIT + (gameState.gramBoostLevel * SHOP_ITEMS_CONFIG.find(i => i.id === 'gram_boost').gramBoost);
-            const delay = getSmokeDelay();
-            
-            // Update a hidden element or console log for debugging
-            console.log(`Current Power: Min=${minHit.toFixed(1)}g, Max=${maxHit.toFixed(1)}g, Delay=${delay}ms`);
         }
 
-        // --- SHOP LOGIC ---
-        
         function getShopItemState(itemConfig) {
             const currentLevel = itemConfig.id === 'gram_boost' ? gameState.gramBoostLevel : gameState.speedBoostLevel;
             const cost = itemConfig.baseCost * (currentLevel + 1);
@@ -571,7 +572,6 @@
                 shopItemsContainer.insertAdjacentHTML('beforeend', itemHtml);
             });
 
-            // Re-attach listeners to the newly rendered buttons
             shopItemsContainer.querySelectorAll('.shop-buy-button').forEach(button => {
                 if (!button.disabled) {
                     button.addEventListener('click', handlePurchase);
@@ -595,29 +595,24 @@
                     gameState.speedBoostLevel += 1;
                 }
                 
-                // Show success message (using console for now as we avoid alert)
                 console.log(`Purchased ${itemConfig.name}! New coin balance: ${gameState.goldCoins}`);
                 
-                // Trigger a small coin sound effect
-                coinSynth.triggerAttackRelease("C5", "16n", Tone.now());
-                coinSynth.triggerAttackRelease("E5", "16n", Tone.now() + 0.05);
+                if(coinSynth) {
+                    coinSynth.triggerAttackRelease("C5", "16n", Tone.now());
+                    coinSynth.triggerAttackRelease("E5", "16n", Tone.now() + 0.05);
+                }
 
-                // Save new state and update UI
                 saveGameState();
                 updateUI();
-                renderShop(); // Re-render to update buttons/levels
+                renderShop(); 
             } else {
                 console.log("Not enough coins to buy this item!");
-                // Optionally play an 'error' sound
-                coinSynth.triggerAttackRelease("C2", "16n", Tone.now(), 0.5);
+                if(coinSynth) coinSynth.triggerAttackRelease("C2", "16n", Tone.now(), 0.5);
             }
         }
 
-        // --- MINIGAME LOGIC ---
-
         function getSmokeDelay() {
             const speedBoost = gameState.speedBoostLevel * SHOP_ITEMS_CONFIG.find(i => i.id === 'speed_boost').speedBoost;
-            // Total delay reduction factor (max 0.5 reduction for 5 levels)
             const reductionFactor = Math.min(0.5, speedBoost); 
             return BASE_SMOKE_DELAY * (1 - reductionFactor);
         }
@@ -625,14 +620,12 @@
         function getCurrentHitRange() {
             const min = BASE_MIN_HIT;
             const max = BASE_MAX_HIT + (gameState.gramBoostLevel * SHOP_ITEMS_CONFIG.find(i => i.id === 'gram_boost').gramBoost);
-            // Ensure min is not greater than max, and that they are at least 0.1
             const calculatedMin = Math.max(0.1, Math.min(min, max)); 
             return { min: calculatedMin, max: max };
         }
 
         function getRandomHitSize() {
             const { min, max } = getCurrentHitRange();
-            // Generates a float between min (e.g., 0.1) and max (e.g., 1.0)
             return Math.random() * (max - min) + min; 
         }
 
@@ -650,7 +643,7 @@
             if (Math.random() < COIN_DROP_CHANCE) {
                 coinReward = COIN_DROP_AMOUNT;
                 gameState.goldCoins += coinReward;
-                coinSynth.triggerAttackRelease("G5", "16n", Tone.now() + 0.1);
+                if(coinSynth) coinSynth.triggerAttackRelease("G5", "16n", Tone.now() + 0.1);
             }
 
             // --- 2. VISUALS & SFX ---
@@ -664,7 +657,6 @@
             const gameArea = document.querySelector('#minigameView .flex.relative');
             if (gameArea) gameArea.appendChild(puff); 
 
-            // Show a message with the gram and coin amount
             const message = document.createElement('div');
             let messageText = `💨 ${currentHitSize.toFixed(1)}g rip!`;
             if (coinReward > 0) {
@@ -685,22 +677,18 @@
                 if (puff.parentElement) puff.remove();
                 if (message.parentElement) message.remove();
                 
-                // Save and refresh UI only after the hit animation is complete
                 saveGameState();
                 updateUI();
             }, smokeDelay); 
         }
         
-        // --- VIEW MANAGEMENT ---
-
+        // --- VIEW MANAGEMENT & INITIAL SETUP (omitted for brevity, assume it's here) ---
         function showView(viewId) {
-            // Hide all content views
             infoView.classList.add('hidden');
             testView.classList.add('hidden');
             minigameView.classList.add('hidden');
             shopView.classList.add('hidden');
             
-            // Highlight active navigation button
             document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('bg-purple-600', 'shadow-lg'));
             
             if (viewId === 'infoView') {
@@ -712,11 +700,9 @@
             } else if (viewId === 'shopView') {
                 document.getElementById('navShopButton').classList.add('bg-purple-600', 'shadow-lg');
                 shopView.classList.remove('hidden');
-                renderShop(); // Render shop content immediately
+                renderShop(); 
             }
         }
-
-        // --- EVENT LISTENERS ---
 
         document.querySelectorAll('.nav-button').forEach(button => {
             button.addEventListener('click', (event) => {
@@ -738,15 +724,9 @@
             eedsCharacter.addEventListener('click', triggerBongHit);
         }
 
-        // Initial setup
         window.addEventListener('load', async () => {
-            // Initialize Tone for SFX
             initSynths();
-            
-            // Initialize Firebase for state persistence
             await initFirebase();
-            
-            // Set initial view
             showView('minigameView');
         });
     </script>
