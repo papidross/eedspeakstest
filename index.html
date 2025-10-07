@@ -26,6 +26,13 @@
             position: relative; 
             z-index: 10;
         }
+        /* Mobile adjustment for container padding */
+        @media (max-width: 640px) {
+            .container {
+                padding: 16px;
+            }
+        }
+
         .glow-text {
             text-shadow: 0 0 5px rgba(255, 255, 255, 0.3), 0 0 15px rgba(16, 185, 129, 0.8);
         }
@@ -100,17 +107,17 @@
             text-align: center;
         }
         
-        /* NEW STYLES FOR COOLER STRAIN DISPLAY */
+        /* NEW STYLES FOR COOLER STRAIN DISPLAY (Adjusted for mobile) */
         .strain-display-cooler {
             position: absolute;
-            bottom: 100px; /* Adjusted to be above the table */
+            bottom: 70px; /* Adjusted to be above the smaller table */
             left: 10px;
             text-align: left;
             padding: 8px 15px;
             border-radius: 12px;
-            border: 2px solid #a855f7; /* Purple Border */
-            background-color: rgba(30, 41, 59, 0.85); /* Darker Background */
-            box-shadow: 0 0 10px rgba(168, 85, 247, 0.4); /* Subtle Purple Glow */
+            border: 2px solid #a855f7; 
+            background-color: rgba(30, 41, 59, 0.85); 
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.4); 
             z-index: 30;
             font-family: 'Inter', sans-serif;
             transition: all 0.2s ease-in-out;
@@ -124,15 +131,29 @@
         .strain-name-text {
             font-size: 1rem;
             font-weight: 800;
-            color: #fef08a; /* Yellow/Gold for strain name */
+            color: #fef08a; 
             text-transform: uppercase;
         }
 
         .strain-amount-text {
             font-size: 0.8rem;
             font-weight: 600;
-            color: #d1d5db; /* Light gray for amount */
+            color: #d1d5db; 
             margin-top: 2px;
+        }
+
+        /* Adjust font size for mobile screens */
+        @media (max-width: 640px) { 
+            .strain-name-text {
+                font-size: 0.875rem; 
+            }
+            .strain-amount-text {
+                font-size: 0.75rem; 
+            }
+            .strain-display-cooler {
+                padding: 6px 10px;
+                bottom: 60px; 
+            }
         }
         /* END NEW STRAIN DISPLAY STYLES */
         
@@ -144,9 +165,9 @@
         }
         #eeds-character {
             cursor: pointer;
-            user-select: none; /* Prevent text selection */
+            user-select: none; 
             transition: transform 0.1s, rotate 0.3s ease-out;
-            z-index: 25; /* Ensure character is above table */
+            z-index: 25; 
         }
         #eeds-character.swaying {
             animation: sway 2.5s infinite ease-in-out;
@@ -183,14 +204,16 @@
             pointer-events: none;
         }
         
+        /* SMOKE ANIMATION ADJUSTMENT FOR MOBILE */
         @keyframes puff {
             0% { transform: translate(-50%, 0) scale(0.2); opacity: 0; }
             50% { opacity: 1; }
             100% { transform: translate(-50%, -100px) scale(1.5); opacity: 0; }
         }
+        
         .smoke-puff {
             position: absolute;
-            bottom: 232px; 
+            bottom: 150px; /* Mobile base position */
             left: 50%;
             transform: translate(-50%, 0);
             width: 30px;
@@ -206,9 +229,10 @@
             0% { transform: translate(0, 0) scale(0.1); opacity: 0.5; }
             100% { transform: translate(30px, -80px) scale(1.5); opacity: 0; }
         }
+        
         .smoke-exhale {
             position: absolute;
-            bottom: 232px; 
+            bottom: 150px; /* Mobile base position */
             right: 40%;
             width: 40px;
             height: 40px;
@@ -219,6 +243,14 @@
             animation: exhale 1.5s ease-out forwards;
             z-index: 20;
         }
+
+        /* Desktop override for smoke position */
+        @media (min-width: 1024px) { 
+            .smoke-puff, .smoke-exhale {
+                bottom: 232px; 
+            }
+        }
+        /* END SMOKE ANIMATION ADJUSTMENT */
 
         @keyframes fade-up-left {
             0% { opacity: 0; transform: translate(-0px, 10px) scale(0.8); } 
@@ -237,7 +269,6 @@
             opacity: 0; 
         }
 
-        /* NEW BONUS MESSAGE ANIMATION/STYLE */
         @keyframes fade-up-right {
             0% { opacity: 0; transform: translate(0px, 10px) scale(0.8); } 
             50% { opacity: 1; transform: translate(30px, -10px) scale(1); } 
@@ -246,7 +277,7 @@
         .bonus-message {
             position: absolute;
             top: 50%;
-            right: 30%; /* Position on the right side */
+            right: 30%; 
             transform: translateY(-50%); 
             font-weight: 800;
             white-space: nowrap;
@@ -254,7 +285,6 @@
             z-index: 50;
             opacity: 0; 
         }
-        /* END NEW BONUS MESSAGE STYLES */
 
         .weed-game-bg {
             background-color: #1c322b;
@@ -264,19 +294,16 @@
             box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
         }
         
-        /* CRITICAL SMOKE TIME STYLE (EDITED: Gold border, less obstructive) */
         .weed-game-bg.critical-smoke {
-            border: 5px solid #facc15; /* Gold/Yellow border */
-            box-shadow: 0 0 30px rgba(250, 204, 21, 0.6), 0 0 10px rgba(255, 255, 255, 0.2); /* Gold glow effect */
-            background-color: #2b2a1c; /* Gold-tinged dark background */
+            border: 5px solid #facc15; 
+            box-shadow: 0 0 30px rgba(250, 204, 21, 0.6), 0 0 10px rgba(255, 255, 255, 0.2); 
+            background-color: #2b2a1c; 
         }
         
-        /* The main CST overlay container is now just a container for the banner, not full-screen */
         #criticalSmokeTimeOverlay {
             pointer-events: none; 
         }
-        /* END NEW CRITICAL SMOKE TIME STYLE */
-
+        
         .shop-item {
             background-color: rgba(30, 41, 59, 0.7); 
             border: 2px solid #a855f7;
@@ -350,7 +377,7 @@
             position: fixed;
             top: 20px;
             left: 50%;
-            transform: translateX(-50%) translateY(-100%); /* Start off-screen vertically */
+            transform: translateX(-50%) translateY(-100%); 
             background: linear-gradient(135deg, #a855f7, #9333ea);
             color: white;
             padding: 15px 30px;
@@ -366,7 +393,7 @@
         }
         #level-up-notification.show {
             opacity: 1;
-            transform: translateX(-50%) translateY(0); /* Move to screen center */
+            transform: translateX(-50%) translateY(0); 
         }
 
         .achievement-card {
@@ -493,9 +520,9 @@
                         </div>
                     </div>
                     
-                    <div id="game-table" class="absolute bottom-0 left-0 right-0 h-[80px] bg-slate-800 border-t-8 border-amber-800 shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-20"></div>
+                    <div id="game-table" class="absolute bottom-0 left-0 right-0 h-[50px] lg:h-[80px] bg-slate-800 border-t-8 border-amber-800 shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-20"></div>
 
-                    <svg id="cosmic-bong" class="w-24 h-48 absolute bottom-[75px] right-1/2 translate-x-1/2 mr-4" viewBox="0 0 100 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg id="cosmic-bong" class="w-16 h-32 lg:w-24 lg:h-48 absolute bottom-[50px] lg:bottom-[75px] right-1/2 translate-x-1/2 mr-4" viewBox="0 0 100 250" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <defs>
                             <radialGradient id="glassGradient" cx="50%" cy="50%" r="50%" fx="60%" fy="60%">
                                 <stop offset="0%" style="stop-color:rgb(255,255,255);stop-opacity:0.8" />
@@ -530,7 +557,7 @@
                         <circle cx="40" cy="235" r="3" fill="#e0f2fe" fill-opacity="0.8"/>
                     </svg>
 
-                    <svg id="eeds-character" class="w-48 h-80 absolute bottom-[42px] right-1/2 translate-x-1/2 ml-4" viewBox="0 0 150 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="transition: transform 0.2s, rotate 0.2s;">
+                    <svg id="eeds-character" class="w-32 h-56 lg:w-48 lg:h-80 absolute bottom-[20px] lg:bottom-[42px] right-1/2 translate-x-1/2 ml-4" viewBox="0 0 150 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="transition: transform 0.2s, rotate 0.2s;">
                         <circle cx="75" cy="20" r="15" fill="#fef08a" stroke="#f59e0b" stroke-width="2"/>
                         <circle cx="70" cy="18" r="1.5" fill="#333"/>
                         <circle cx="80" cy="18" r="1.5" fill="#333"/>
@@ -1328,8 +1355,6 @@
                 // Remove smoking class after the smoke delay
                 setTimeout(() => {
                     eedsCharacter.classList.remove('smoking');
-                    // Removed playExhaleSound() to remove the "Bling" or high-pitched sound.
-                    // playExhaleSound(); 
                     
                     // Trigger character sway immediately after smoke ends
                     if (!gameState.refilling) {
