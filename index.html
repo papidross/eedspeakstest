@@ -733,43 +733,43 @@
             // EDITED: Changed from 'doubleChance' to 'bonusChance' and updated description
             { id: 'bonusChance', name: 'Lucky Charm', desc: 'Increases Bonus Euro Chance by +1%.', baseCost: 600, bonusChanceBoost: 0.01, maxPurchases: 5, icon: '🍀' },
             { id: 'reloadSpeed', name: 'Faster Reload', desc: 'Increases bowl reload speed by 10%', baseCost: 300, reloadSpeedBoost: 0.1, maxPurchases: 4, icon: '💨' },
-            { id: 'bong_master', name: 'Bong Master', desc: 'Instantly cleans the bong glass/resin.', baseCost: BONG_MASTER_COST, maxPurchases: 99, icon: '🧼' },
-            { id: 'golden_bong', name: 'Golden Bong', desc: `Triples all Euro income!`, baseCost: GOLDEN_BONG_COST, maxPurchases: 1, icon: '🌟' },
+            { id: 'bong_master', name: 'Bong Master', desc: 'Instantly cleans the bong glass/resin.', baseCost: BONG_MASTER_COST, icon: '🧼' },
+            { id: 'golden_bong', name: 'Golden Bong', desc: `Triples all Euro income!`, baseCost: GOLDEN_BONG_COST, icon: '🌟' },
         ];
         
         // --- STRAIN CONFIGURATION (COSTS SCALED BY POTENCY) ---
         const STRAINS_CONFIG = [
-    { id: 'prassimies', name: 'Prässimies Blend (Starter)', cost: 200, quantity: 10.0, desc: 'Reliable starter blend. 10g bag (200€).' },
+    { id: 'prassimies', name: 'Prässi paskaa (Starter)', cost: 100, quantity: 10.0, desc: 'Brown, kiefless, disgusting starter weed. 10g bag (200€).' },
     { id: 'ogkush', name: 'OG Kush (Hybrid)', cost: 200, quantity: 10.0, desc: 'Classic hybrid. 10g bag (200€).' },
-    { id: 'green_crack', name: 'Green Crack (Sativa)', cost: 200, quantity: 10.0, desc: 'Energetic Sativa. 10g bag (200€).' },
-    { id: 'gsc', name: 'Girl Scout Cookies (Hybrid)', cost: 200, quantity: 10.0, desc: 'Tasty hybrid favorite. 10g bag (200€).' },
-    { id: 'northern_lights', name: 'Northern Lights (Indica)', cost: 200, quantity: 10.0, desc: 'Legendary Indica. 10g bag (200€).' }
+    { id: 'green_crack', name: 'Green Eedspeaks (Sativa)', cost: 200, quantity: 10.0, desc: 'Energetic Eeds Sativa. 10g bag (200€).' },
+    { id: 'gsc', name: 'Eeds Scout Cookies (Hybrid)', cost: 200, quantity: 10.0, desc: 'Tasty hybrid favorite. 10g bag (200€).' },
+    { id: 'northern_lights', name: 'Northern Eeds (Indica)', cost: 200, quantity: 10.0, desc: 'Legendary Indica. 10g bag (200€).' }
 ];
 
         // --- ACHIEVEMENTS CONFIGURATION ---
         const ACHIEVEMENTS_CONFIG = [
-            { id: 'first_hit', name: 'First Toke', desc: 'Take your very first hit.', reward: 10, check: (state) => state.hits >= 1 },
+            { id: 'first_hit', name: 'First Toke', desc: 'Take your very first hit.', reward: 25, check: (state) => state.hits >= 1 },
             { id: 'baby_lungs', name: 'Baby Lungs', desc: 'Smoke 1.0 total grams.', reward: 25, check: (state) => state.gramsSmoked >= 1.0 },
-            { id: 'quarter_ounce', name: 'Quarter Ounce Quest', desc: 'Smoke 7.0 total grams.', reward: 50, check: (state) => state.gramsSmoked >= 7.0 },
+            { id: 'quarter_ounce', name: 'Quarter Ounce Quest', desc: 'Smoke 7.0 total grams.', reward: 150, check: (state) => state.gramsSmoked >= 7.0 },
             { id: 'half_ounce', name: 'Half Ounce Haze', desc: 'Smoke 14.0 total grams.', reward: 100, check: (state) => state.gramsSmoked >= 14.0 },
-            { id: 'big_rip', name: 'Biggest Rip Ever', desc: 'Achieve a single hit of 1.0g or more.', reward: 50, check: (state) => state.biggestHit >= 1.0 },
-            { id: 'high_roller', name: 'High Roller', desc: 'Earn 500 total Euros.', reward: 75, check: (state) => state.eurosEarnedTotal >= 500 },
-            { id: 'max_level_gram', name: 'Maxed Grinder', desc: 'Max out the Grinder Upgrade (Level 5).', reward: 150, check: (state) => state.gramBoostLevel >= 5 },
-            { id: 'level_5', name: 'Cosmic Smoker', desc: 'Reach Level 5.', reward: 200, check: (state) => state.currentLevel >= 5 },
-            { id: 'hyi_vittu', name: 'Hyi vittu', desc: 'Reach 100% Bong Dirtiness Level.', reward: 100, check: (state) => state.bongDirtiness >= MAX_DIRTINESS },
+            { id: 'big_rip', name: 'Biggest Rip Ever', desc: 'Achieve a single hit of 1.0g or more.', reward: 500, check: (state) => state.biggestHit >= 1.0 },
+            { id: 'high_roller', name: 'High Roller', desc: 'Earn 500 total Euros.', reward: 1000, check: (state) => state.eurosEarnedTotal >= 500 },
+            { id: 'max_level_gram', name: 'Maxed Grinder', desc: 'Max out the Grinder Upgrade (Level 5).', reward: 250, check: (state) => state.gramBoostLevel >= 5 },
+            { id: 'level_5', name: 'Bongin rassaaja', desc: 'Reach Level 5.', reward: 200, check: (state) => state.currentLevel >= 5 },
+            { id: 'hyi_vittu', name: 'Hyi vittu', desc: 'Reach 100% Bong Dirtiness Level.', reward: 1000, check: (state) => state.bongDirtiness >= MAX_DIRTINESS },
         ];
 
         // --- CONSTANTS for Ranks ---
         const RANKS_CONFIG = [
-            { grams: 1000, name: 'Cosmic Overlord', color: 'text-purple-600' },
-            { grams: 500, name: 'The Legend', color: 'text-yellow-600' },
-            { grams: 250, name: 'The Elder', color: 'text-red-600' },
-            { grams: 100, name: 'Certified Stoner', color: 'text-blue-600' },
-            { grams: 50, name: 'High Contender', color: 'text-green-600' },
-            { grams: 20, name: 'Serious Smoker', color: 'text-fuchsia-600' },
-            { grams: 10, name: 'Regular User', color: 'text-emerald-400' },
-            { grams: 5, name: 'Casual User', color: 'text-cyan-400' },
-            { grams: 1, name: 'Bud Novice', color: 'text-white' },
+            { grams: 1000, name: 'Eedspeaks', color: 'text-purple-600' },
+            { grams: 500, name: 'Aatu Kreivi', color: 'text-yellow-600' },
+            { grams: 250, name: 'Bongi Keisari', color: 'text-red-600' },
+            { grams: 100, name: 'Certified Nissinen', color: 'text-blue-600' },
+            { grams: 50, name: 'Bongin rassaaja', color: 'text-green-600' },
+            { grams: 20, name: 'Kyykän hittaaja', color: 'text-fuchsia-600' },
+            { grams: 10, name: 'Jointin rollaaja', color: 'text-emerald-400' },
+            { grams: 5, name: 'Dullan imppaaja', color: 'text-cyan-400' },
+            { grams: 1, name: 'Prässi smoukkaaja', color: 'text-white' },
         ];
 
 
@@ -1747,5 +1747,6 @@
     </script>
 </body>
 </html>
+
 
 
