@@ -739,16 +739,12 @@
         
         // --- STRAIN CONFIGURATION (COSTS SCALED BY POTENCY) ---
         const STRAINS_CONFIG = [
-            { id: 'prassimies', name: 'Prässimies Blend (Starter)', potency: 1.0, cost: 0, quantity: 10.0, desc: 'Eeds\' reliable, default blend. 10g starter supply.' },
-            // Cost increased to scale with potency (Potency 1.5 -> 300€)
-            { id: 'ogkush', name: 'OG Kush (Hybrid)', potency: 1.5, cost: 300, quantity: 10.0, desc: 'A potent hybrid. +50% base hit size. Comes in a 10g bag (300€).' },
-            // Cost increased to scale with potency (Potency 2.0 -> 400€)
-            { id: 'green_crack', name: 'Green Crack (Sativa)', potency: 2.0, cost: 400, quantity: 10.0, desc: 'An energetic Sativa. +100% base hit size. Comes in a 10g bag (400€).' },
-            // Cost increased to scale with potency (Potency 2.5 -> 500€)
-            { id: 'gsc', name: 'Girl Scout Cookies (Hybrid)', potency: 2.5, cost: 500, quantity: 10.0, desc: 'A high-potency hybrid. +150% base hit size. Comes in a 10g bag (500€).' },
-            // Cost increased to scale with potency (Potency 3.0 -> 600€)
-            { id: 'northern_lights', name: 'Northern Lights (Indica)', potency: 3.0, cost: 600, quantity: 10.0, desc: 'A legendary, deep Indica. +200% base hit size. Comes in a 10g bag (600€).' }
-        ];
+    { id: 'prassimies', name: 'Prässimies Blend (Starter)', cost: 200, quantity: 10.0, desc: 'Reliable starter blend. 10g bag (200€).' },
+    { id: 'ogkush', name: 'OG Kush (Hybrid)', cost: 200, quantity: 10.0, desc: 'Classic hybrid. 10g bag (200€).' },
+    { id: 'green_crack', name: 'Green Crack (Sativa)', cost: 200, quantity: 10.0, desc: 'Energetic Sativa. 10g bag (200€).' },
+    { id: 'gsc', name: 'Girl Scout Cookies (Hybrid)', cost: 200, quantity: 10.0, desc: 'Tasty hybrid favorite. 10g bag (200€).' },
+    { id: 'northern_lights', name: 'Northern Lights (Indica)', cost: 200, quantity: 10.0, desc: 'Legendary Indica. 10g bag (200€).' }
+];
 
         // --- ACHIEVEMENTS CONFIGURATION ---
         const ACHIEVEMENTS_CONFIG = [
@@ -937,7 +933,7 @@
             const maxHitBase = BASE_MAX_HIT + (gameState.gramBoostLevel * SHOP_ITEMS_CONFIG.find(i => i.id === 'gramBoost').gramBoost);
             
             // Apply strain potency multiplier and random variation
-            let hitGram = (Math.random() * (maxHitBase - BASE_MIN_HIT) + BASE_MIN_HIT) * strain.potency;
+            let hitGram = (Math.random() * (maxHitBase - BASE_MIN_HIT) + BASE_MIN_HIT) ;
             
             // Apply dirtiness penalty
             const dirtinessPenalty = 1 - (gameState.bongDirtiness * DIRTINESS_PENALTY_PER_UNIT);
@@ -1751,3 +1747,4 @@
     </script>
 </body>
 </html>
+
