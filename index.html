@@ -758,13 +758,13 @@
 
         // --- SHOP ITEM CONFIGURATION (COSTS DOUBLED TO SLOW PROGRESSION) ---
         const SHOP_ITEMS_CONFIG = [
-            { id: 'gramBoost', name: 'Grinder Upgrade', desc: 'Increases Max Hit by +0.1g', baseCost: 100, gramBoost: 0.1, maxPurchases: 5, icon: '🔥' },
-            { id: 'speedBoost', name: 'Fast Lighter', desc: 'Reduces Hit Delay by -10%', baseCost: 200, speedBoost: 0.1, maxPurchases: 5, icon: '⚡' },
-            { id: 'coinChance', name: 'Hydroponic Setup', desc: 'Increases Bonus Euro Chance by +5%', baseCost: 300, coinChanceBoost: 0.05, maxPurchases: 4, icon: '🌱' },
-            { id: 'coinAmount', name: 'Munchies Fund', desc: 'Increases Bonus Euro Amount by +10', baseCost: 400, coinAmountBoost: 10, maxPurchases: 5, icon: '🍔' },
+            { id: 'gramBoost', name: 'Grinder Upgrade', desc: 'Increases Max Hit by +0.1g', baseCost: 100, gramBoost: 0.1, maxPurchases: 1000, icon: '🔥' },
+            { id: 'speedBoost', name: 'Fast Lighter', desc: 'Reduces Hit Delay by -10%', baseCost: 200, speedBoost: 0.1, maxPurchases: 1000, icon: '⚡' },
+            { id: 'coinChance', name: 'Hydroponic Setup', desc: 'Increases Bonus Euro Chance by +5%', baseCost: 300, coinChanceBoost: 0.05, maxPurchases: 1000, icon: '🌱' },
+            { id: 'coinAmount', name: 'Munchies Fund', desc: 'Increases Bonus Euro Amount by +10', baseCost: 400, coinAmountBoost: 10, maxPurchases: 1000, icon: '🍔' },
             // EDITED: Changed from 'doubleChance' to 'bonusChance' and updated description
-            { id: 'bonusChance', name: 'Lucky Charm', desc: 'Increases Bonus Euro Chance by +1%.', baseCost: 600, bonusChanceBoost: 0.01, maxPurchases: 5, icon: '🍀' },
-            { id: 'reloadSpeed', name: 'Faster Reload', desc: 'Increases bowl reload speed by 10%', baseCost: 300, reloadSpeedBoost: 0.1, maxPurchases: 4, icon: '💨' },
+            { id: 'bonusChance', name: 'Lucky Charm', desc: 'Increases Bonus Euro Chance by +1%.', baseCost: 600, bonusChanceBoost: 0.01, maxPurchases: 1000, icon: '🍀' },
+            { id: 'reloadSpeed', name: 'Faster Reload', desc: 'Increases bowl reload speed by 10%', baseCost: 300, reloadSpeedBoost: 0.1, maxPurchases: 100, icon: '💨' },
             { id: 'bong_master', name: 'Bong Master', desc: 'Instantly cleans the bong glass/resin.', baseCost: BONG_MASTER_COST, icon: '🧼' },
             { id: 'golden_bong', name: 'Golden Bong', desc: `Triples all Euro income!`, baseCost: GOLDEN_BONG_COST, icon: '🌟' },
         ];
@@ -1546,6 +1546,7 @@
             { id: 'hundred_hits', name: 'Akvaariomode', desc: 'Take 100 total hits.', condition: () => gameState.totalHits >= 100, reward: 100, unlocked: false },
             { id: 'master_smoker', name: 'Helveti pööpöösä', desc: 'Reach Level 10.', condition: () => gameState.level >= 10, reward: MILESTONE_REWARD, unlocked: false },
             { id: 'gold_fever', name: 'Tuhat helvetin euroa', desc: 'Earn 1000 euros.', condition: () => gameState.stats.goldEarned >= 1000, reward: MILESTONE_REWARD, unlocked: false },
+            { id: 'gold_fever', name: 'Miljoona paukahti tilile', desc: 'Earn 1,000,000 euros.', condition: () => gameState.stats.goldEarned >= 420000, reward: MILESTONE_REWARD, unlocked: false },
             { id: 'clean_freak', name: 'Ny on cleani', desc: 'Change the bong water 10 times.', condition: () => gameState.stats.waterChanges >= 10, reward: 200, unlocked: false },
             { id: 'bong_wizard', name: 'Kultanen bogo', desc: 'Unlock the Golden Bong upgrade.', condition: () => gameState.upgrades['golden_bong'] >= 1, reward: 500, unlocked: false },
         ];
@@ -1990,4 +1991,5 @@
     </script>
 </body>
 </html>
+
 
