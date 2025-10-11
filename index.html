@@ -1549,6 +1549,70 @@
             { id: 'gold_fever', name: 'Miljoona paukahti tilile', desc: 'Earn 1,000,000 euros.', condition: () => gameState.stats.goldEarned >= 420000, reward: MILESTONE_REWARD, unlocked: false },
             { id: 'clean_freak', name: 'Ny on cleani', desc: 'Change the bong water 10 times.', condition: () => gameState.stats.waterChanges >= 10, reward: 200, unlocked: false },
             { id: 'bong_wizard', name: 'Kultanen bogo', desc: 'Unlock the Golden Bong upgrade.', condition: () => gameState.upgrades['golden_bong'] >= 1, reward: 500, unlocked: false },
+            { id: 'hit100', name: 'Century Smoker', desc: 'Take 100 total hits.', required: 100, type: 'totalHits', reward: 50, unlocked: false },
+            { id: 'hit500', name: 'Puff Pal', desc: 'Take 500 total hits.', required: 500, type: 'totalHits', reward: 250, unlocked: false },
+            { id: 'hit1k', name: 'Kilo-Hit Club', desc: 'Take 1,000 total hits.', required: 1000, type: 'totalHits', reward: 500, unlocked: false },
+            { id: 'hit5k', name: 'The Persistent Puff', desc: 'Take 5,000 total hits.', required: 5000, type: 'totalHits', reward: 2500, unlocked: false },
+            { id: 'hit10k', name: 'Ten Thousand Tokes', desc: 'Take 10,000 total hits.', required: 10000, type: 'totalHits', reward: 5000, unlocked: false },
+            { id: 'hit50k', name: 'Half-Century Smoker', desc: 'Take 50,000 total hits.', required: 50000, type: 'totalHits', reward: 25000, unlocked: false },
+            { id: 'hit100k', name: 'Hundo-K Hitter', desc: 'Take 100,000 total hits.', required: 100000, type: 'totalHits', reward: 50000, unlocked: false },
+            { id: 'hit500k', name: 'Master Chain Smoker', desc: 'Take 500,000 total hits.', required: 500000, type: 'totalHits', reward: 250000, unlocked: false },
+            { id: 'hit1M', name: 'Million Hit Milestone', desc: 'Take 1,000,000 total hits.', required: 1000000, type: 'totalHits', reward: 500000, unlocked: false },
+            { id: 'hit2M', name: 'Double Million', desc: 'Take 2,000,000 total hits.', required: 2000000, type: 'totalHits', reward: 750000, unlocked: false },
+            { id: 'hit5M', name: 'Five Million Tokes', desc: 'Take 5,000,000 total hits.', required: 5000000, type: 'totalHits', reward: 1000000, unlocked: false },
+            { id: 'hit10M', name: 'Ten Million Master', desc: 'Take 10,000,000 total hits.', required: 10000000, type: 'totalHits', reward: 1500000, unlocked: false },
+            { id: 'hit20M', name: 'Twenty Million', desc: 'Take 20,000,000 total hits.', required: 20000000, type: 'totalHits', reward: 2000000, unlocked: false },
+            { id: 'hit30M', name: 'Thirty Million', desc: 'Take 30,000,000 total hits.', required: 30000000, type: 'totalHits', reward: 2500000, unlocked: false },
+            { id: 'hit40M', name: 'Forty Million', desc: 'Take 40,000,000 total hits.', required: 40000000, type: 'totalHits', reward: 3000000, unlocked: false },
+            { id: 'hit50M', name: 'Half-Billion Hitter', desc: 'Take 50,000,000 total hits.', required: 50000000, type: 'totalHits', reward: 3500000, unlocked: false },
+            { id: 'hit60M', name: 'Sixty Million', desc: 'Take 60,000,000 total hits.', required: 60000000, type: 'totalHits', reward: 4000000, unlocked: false },
+            { id: 'hit70M', name: 'Seventy Million', desc: 'Take 70,000,000 total hits.', required: 70000000, type: 'totalHits', reward: 4500000, unlocked: false },
+            { id: 'hit80M', name: 'Eighty Million', desc: 'Take 80,000,000 total hits.', required: 80000000, type: 'totalHits', reward: 5000000, unlocked: false },
+            { id: 'hit100M', name: 'Infinite Inhaler', desc: 'Take 100,000,000 total hits.', required: 100000000, type: 'totalHits', reward: 10000000, unlocked: false },
+
+            // Grams-based (20)
+            { id: 'gram10', name: 'First Ounce', desc: 'Smoke 10 grams total.', required: 10, type: 'totalGramsSmoked', reward: 100, unlocked: false },
+            { id: 'gram50', name: '50 Gram Stash', desc: 'Smoke 50 grams total.', required: 50, type: 'totalGramsSmoked', reward: 500, unlocked: false },
+            { id: 'gram100', name: 'Hundo-Gram Hero', desc: 'Smoke 100 grams total.', required: 100, type: 'totalGramsSmoked', reward: 1000, unlocked: false },
+            { id: 'gram500', name: 'Half-Kilo King', desc: 'Smoke 500 grams total.', required: 500, type: 'totalGramsSmoked', reward: 5000, unlocked: false },
+            { id: 'gram1k', name: 'Kilogram Crusader', desc: 'Smoke 1,000 grams total.', required: 1000, type: 'totalGramsSmoked', reward: 10000, unlocked: false },
+            { id: 'gram5k', name: 'Five Kilo Finisher', desc: 'Smoke 5,000 grams total.', required: 5000, type: 'totalGramsSmoked', reward: 50000, unlocked: false },
+            { id: 'gram10k', name: 'Ten Kilo Titan', desc: 'Smoke 10,000 grams total.', required: 10000, type: 'totalGramsSmoked', reward: 100000, unlocked: false },
+            { id: 'gram50k', name: 'Fifty Kilo Fumes', desc: 'Smoke 50,000 grams total.', required: 50000, type: 'totalGramsSmoked', reward: 500000, unlocked: false },
+            { id: 'gram100k', name: 'Hundo-Kilo High', desc: 'Smoke 100,000 grams total.', required: 100000, type: 'totalGramsSmoked', reward: 1000000, unlocked: false },
+            { id: 'gram200k', name: 'Double Hundo-K', desc: 'Smoke 200,000 grams total.', required: 200000, type: 'totalGramsSmoked', reward: 1500000, unlocked: false },
+            { id: 'gram300k', name: 'Triple Hundo-K', desc: 'Smoke 300,000 grams total.', required: 300000, type: 'totalGramsSmoked', reward: 2000000, unlocked: false },
+            { id: 'gram400k', name: 'Quad Hundo-K', desc: 'Smoke 400,000 grams total.', required: 400000, type: 'totalGramsSmoked', reward: 2500000, unlocked: false },
+            { id: 'gram500k', name: 'Half-Mega Smoker', desc: 'Smoke 500,000 grams total.', required: 500000, type: 'totalGramsSmoked', reward: 3000000, unlocked: false },
+            { id: 'gram600k', name: 'Six Hundo-K', desc: 'Smoke 600,000 grams total.', required: 600000, type: 'totalGramsSmoked', reward: 3500000, unlocked: false },
+            { id: 'gram700k', name: 'Seven Hundo-K', desc: 'Smoke 700,000 grams total.', required: 700000, type: 'totalGramsSmoked', reward: 4000000, unlocked: false },
+            { id: 'gram800k', name: 'Eight Hundo-K', desc: 'Smoke 800,000 grams total.', required: 800000, type: 'totalGramsSmoked', reward: 4500000, unlocked: false },
+            { id: 'gram900k', name: 'Nine Hundo-K', desc: 'Smoke 900,000 grams total.', required: 900000, type: 'totalGramsSmoked', reward: 5000000, unlocked: false },
+            { id: 'gram1M', name: 'Mega Gram Master', desc: 'Smoke 1,000,000 grams total.', required: 1000000, type: 'totalGramsSmoked', reward: 6000000, unlocked: false },
+            { id: 'gram2M', name: 'Double Mega Gram', desc: 'Smoke 2,000,000 grams total.', required: 2000000, type: 'totalGramsSmoked', reward: 7500000, unlocked: false },
+            { id: 'gram5M', name: 'Five Mega Grams', desc: 'Smoke 5,000,000 grams total.', required: 5000000, type: 'totalGramsSmoked', reward: 10000000, unlocked: false }, // (20)
+
+            // Euros-based (20)
+            { id: 'euro1k', name: 'First Grand', desc: 'Earn 1,000 total Euros.', required: 1000, type: 'goldEarned', reward: 100, unlocked: false },
+            { id: 'euro5k', name: 'Pocket Change', desc: 'Earn 5,000 total Euros.', required: 5000, type: 'goldEarned', reward: 500, unlocked: false },
+            { id: 'euro10k', name: 'Ten K Club', desc: 'Earn 10,000 total Euros.', required: 10000, type: 'goldEarned', reward: 1000, unlocked: false },
+            { id: 'euro50k', name: 'Half-C-Note Hero', desc: 'Earn 50,000 total Euros.', required: 50000, type: 'goldEarned', reward: 5000, unlocked: false },
+            { id: 'euro100k', name: 'Hundo-K Wealth', desc: 'Earn 100,000 total Euros.', required: 100000, type: 'goldEarned', reward: 10000, unlocked: false },
+            { id: 'euro500k', name: 'Half-Millionaire', desc: 'Earn 500,000 total Euros.', required: 500000, type: 'goldEarned', reward: 50000, unlocked: false },
+            { id: 'euro1M', name: 'EEDS Millionaire', desc: 'Earn 1,000,000 total Euros.', required: 1000000, type: 'goldEarned', reward: 100000, unlocked: false },
+            { id: 'euro5M', name: 'Five Million Flex', desc: 'Earn 5,000,000 total Euros.', required: 5000000, type: 'goldEarned', reward: 500000, unlocked: false },
+            { id: 'euro10M', name: 'Ten Million Tycoon', desc: 'Earn 10,000,000 total Euros.', required: 10000000, type: 'goldEarned', reward: 1000000, unlocked: false },
+            { id: 'euro20M', name: 'Twenty Million', desc: 'Earn 20,000,000 total Euros.', required: 20000000, type: 'goldEarned', reward: 1500000, unlocked: false },
+            { id: 'euro50M', name: 'Fifty Million', desc: 'Earn 50,000,000 total Euros.', required: 50000000, type: 'goldEarned', reward: 2000000, unlocked: false },
+            { id: 'euro100M', name: 'Hundo-Million Mogul', desc: 'Earn 100,000,000 total Euros.', required: 100000000, type: 'goldEarned', reward: 3000000, unlocked: false },
+            { id: 'euro200M', name: 'Double Hundo-Million', desc: 'Earn 200,000,000 total Euros.', required: 200000000, type: 'goldEarned', reward: 4000000, unlocked: false },
+            { id: 'euro300M', name: 'Triple Hundo-Million', desc: 'Earn 300,000,000 total Euros.', required: 300000000, type: 'goldEarned', reward: 5000000, unlocked: false },
+            { id: 'euro400M', name: 'Quad Hundo-Million', desc: 'Earn 400,000,000 total Euros.', required: 400000000, type: 'goldEarned', reward: 6000000, unlocked: false },
+            { id: 'euro500M', name: 'Half-Billionaire', desc: 'Earn 500,000,000 total Euros.', required: 500000000, type: 'goldEarned', reward: 7000000, unlocked: false },
+            { id: 'euro600M', name: 'Six Hundo-Million', desc: 'Earn 600,000,000 total Euros.', required: 600000000, type: 'goldEarned', reward: 8000000, unlocked: false },
+            { id: 'euro700M', name: 'Seven Hundo-Million', desc: 'Earn 700,000,000 total Euros.', required: 700000000, type: 'goldEarned', reward: 9000000, unlocked: false },
+            { id: 'euro800M', name: 'Eight Hundo-Million', desc: 'Earn 800,000,000 total Euros.', required: 800000000, type: 'goldEarned', reward: 10000000, unlocked: false },
+            { id: 'euro1B', name: 'Billionaire Blazer', desc: 'Earn 1,000,000,000 total Euros.', required: 1000000000, type: 'goldEarned', reward: 20000000, unlocked: false }, // (20)
         ];
         
         function checkAchievements() {
@@ -1991,5 +2055,6 @@
     </script>
 </body>
 </html>
+
 
 
